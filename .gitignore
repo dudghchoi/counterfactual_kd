@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+
+# Reproduction outputs — regenerated locally, NEVER committed (weights, runs, teachers)
+results/runs/
+results/teachers*/
+runs/
+logs/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+
+# Datasets / model caches are downloaded on demand (HuggingFace), never vendored
+data/
+.cache/
+
+# Environments / tooling / logs
+.venv/
+.env
+*.log
+.omc/
+wandb/
+/datasets
+datasets/
+poison_data/
+models/
+checkpoints/

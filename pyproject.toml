@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "counterfactual_kd"
+version = "0.1.0"
+description = "Counterfactual measurement of distillation-time backdoor transfer (matched four-condition protocol, Cohen's h + paired-bootstrap ROPE verdict)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.21",
+]
+
+[project.optional-dependencies]
+# Retrain matched students and re-evaluate from cached teachers, rebuild the dashboard.
+repro = [
+    "torch>=2.0",
+    "transformers>=4.30",
+    "datasets>=2.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.60",
+    "peft>=0.7",
+    "accelerate>=0.20",
+]
+# Additionally retrain poisoned teachers (delegates to OpenBackdoor). Kept separate
+# so core/repro users never resolve OpenBackdoor's own torch/transformers pins.
+teacher = [
+    "openbackdoor @ git+https://github.com/thunlp/OpenBackdoor.git@1192ba303a7bc198adea10c292c7802c4960b307",
+]
+
+[project.scripts]
+counterfactual_kd = "run:main"
+
+[tool.setuptools]
+py-modules = ["run"]
+
+[tool.setuptools.packages.find]
+include = ["counterfactual_kd*"]
+exclude = ["*._deferred", "*._deferred.*"]
+namespaces = false

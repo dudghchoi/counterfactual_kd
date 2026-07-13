@@ -1,0 +1,9 @@
+regime,dataset,kd_type,P_trig,C_trig,k,teacher_asr,teacher_asr_null,ca_poisoned,verdict,position
+fullcorpus,agnews,feature,0.3495,0.4872,-0.1377,0.9967,0.1268,0.9462,NEGATIVE,suffix
+fullcorpus,agnews,logit,0.3926,0.3372,0.0554,0.9967,0.1268,0.9459,MARGINAL,suffix
+fullcorpus,sst2,feature,0.3649,0.5261,-0.1611,1.0,0.6493,0.9106,NEGATIVE,suffix
+fullcorpus,sst2,logit,0.4123,0.4834,-0.0711,1.0,0.6493,0.9174,NEGATIVE,suffix
+lora,agnews,feature,0.2577,0.2637,-0.006,0.9967,0.1268,0.8907,NEGATIVE,suffix
+lora,agnews,logit,0.2554,0.2537,0.0018,0.9967,0.1268,0.8921,NO TRANSFER,suffix
+lora,sst2,feature,0.0,0.0,0.0,1.0,0.6493,0.867,NEGATIVE,suffix
+lora,sst2,logit,0.0,0.0,0.0,1.0,0.6493,0.867,NEGATIVE,suffix

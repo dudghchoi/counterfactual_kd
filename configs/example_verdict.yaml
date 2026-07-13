@@ -1,0 +1,54 @@
+# Example counterfactual_kd run — one matched cell, end to end.
+#   BERT-large -> BERT-base, SST-2, logit KD, ATBA trigger at prefix (paper-hp).
+#
+# Run it:
+#   counterfactual_kd repro --config configs/example_verdict.yaml
+#   #  == python -m counterfactual_kd run configs/example_verdict.yaml
+#
+# stage0 poisons + trains the two teachers (needs the [teacher] extra / OpenBackdoor);
+# stage1 distills the matched students S_p, S_c (needs [repro]); stage2 evaluates both
+# on the same triggered non-target set and writes the ROPE verdict. Datasets and base
+# models download from the HuggingFace Hub on first use — nothing is bundled.
+#
+# Expected verdict: NO TRANSFER  (P_trig ~0.886 vs C_trig ~0.900, k ~= -0.014).
+
+name: example_verdict_bert_sst2_logit_atba
+seeds: [42]
+
+pairs:
+  - [bert-large-uncased, bert-base-uncased]
+
+datasets: [sst2]
+attacks:  [atba]
+kd_types: [logit]
+methods:  [kd]
+
+stage0:                 # train poisoned + clean teachers (needs OpenBackdoor; [teacher] extra)
+  batch_size: 32
+  epochs: 5
+  lr: 2.0e-5
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.10
+  max_len: 128
+
+stage1:                 # logit KD to the student (paper hyperparameters)
+  temperature: 1.0
+  alpha: 0.8
+  kd_epochs: 10
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 3
+  weight_decay: 0.0
+  lr: 2.0e-5
+  random_init_student: false
+  bc_warmup_epochs: 0
+
+stage2:                 # evaluate both students -> ROPE verdict + per-cell preds
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+
+output:
+  teacher_dir: results/teachers     # trained teachers cached here (reused across runs)
+  runs_dir: results/runs            # students + artifacts/results/ written here
