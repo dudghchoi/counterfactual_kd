@@ -146,6 +146,17 @@ isolated to a single module (`counterfactual_kd/adapters/openbackdoor.py`), so:
 | retrain matched **students** from **cached teachers** + re-evaluate | `.[repro]` | no |
 | retrain the poisoned/clean **teachers** from scratch (stage 0) | `.[repro,teacher]` | **yes** |
 
+> **Known issue in the first public commit (`d58c87e`).** An unanchored `data/`
+> ignore rule kept the code packages `counterfactual_kd/data/` and
+> `counterfactual_kd/datasets/` out of that commit. In that commit only the
+> verdict path (row 1) works; rows 2–3 stop with
+> `ModuleNotFoundError: counterfactual_kd.data`. Use a later commit, which ships
+> both packages. Cite a fixed commit rather than `main`.
+>
+> **Precision.** Teachers are held in bf16 during distillation; students are
+> trained in the precision set by `stage1.student_dtype` (the paper's corpus
+> ablation uses fp32) and are always evaluated in bf16.
+
 So the common path — reproduce the measurement from cached teachers — never
 touches OpenBackdoor:
 

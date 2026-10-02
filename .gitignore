@@ -17,8 +17,10 @@ logs/
 *.pt
 *.ckpt
 
-# Datasets / model caches are downloaded on demand (HuggingFace), never vendored
-data/
+# Datasets / model caches are downloaded on demand (HuggingFace), never vendored.
+# Root-anchored: an unanchored `data/` also matched the code package
+# counterfactual_kd/data/, which v1.0 therefore shipped without.
+/data/
 .cache/
 
 # Environments / tooling / logs
@@ -28,7 +30,6 @@ data/
 .omc/
 wandb/
 /datasets
-datasets/
 poison_data/
 models/
 checkpoints/
