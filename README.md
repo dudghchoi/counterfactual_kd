@@ -35,10 +35,13 @@ Distillation* (under review).
 
 > **Correction of the v1 ATBA conclusion.** v1 (commits `d58c87e`, `3aced28`;
 > Zenodo v1.0 and v1.1) reported **no transfer** for ATBA, including the
-> Quickstart cell below. Under the version-2 audit, ATBA transfers to every BERT
+> Quickstart cell below. In the version-2 runs, ATBA transfers to every BERT
 > student: k = 0.135–0.189 (AG News and SST-2, logit and feature KD; POSITIVE at
-> δ = 0.05). The v1 ATBA conclusion is superseded. The GPT-2 SST-2 and Qwen3
-> AG News logit-KD batteries (AddSent, BadNets) are NO TRANSFER at δ = 0.05.
+> δ = 0.05). The v1 ATBA conclusion is superseded. The v1 ATBA cells themselves,
+> re-decided under the version-2 rule, contain no positive cell, so the change
+> comes from the version-2 runs, not from the change of decision rule. The GPT-2
+> SST-2 and Qwen3 AG News logit-KD batteries (AddSent, BadNets) are NO TRANSFER
+> at δ = 0.05.
 
 What is new:
 
@@ -62,11 +65,16 @@ What is new:
   copies: some default paths point to the authors' server, and section
   references in docstrings (`docs/tifs_plan.md`, "TIFS addendum") point to
   internal design notes that are not distributed.
-- **Per-input predictions** for every version-2 cell, with a stand-alone
-  verifier, are archived as version 2.0 of the Zenodo record
-  [10.5281/zenodo.21772216](https://doi.org/10.5281/zenodo.21772216).
+- **Per-input predictions** for every version-2 run, with the run configurations
+  and result tables, are archived as version 2.0 of the Zenodo record
+  [10.5281/zenodo.21772216](https://doi.org/10.5281/zenodo.21772216) (this DOI
+  resolves to the latest version). From the
+  archive root, `python scripts/tifs/analyze.py --out recomputed/` rebuilds the
+  result tables without a GPU or model weights (numpy and scipy).
 
-`pytest -q` runs `tests/`; four tests of the server job schedule
+`tifs` in paths and run IDs is the internal name of the version-2 experiment
+program; the names are kept so that every archived result maps to its config
+and code. `pytest -q` runs `tests/`; four tests of the server job schedule
 (`scripts/tifs/queue_plan.py`) are skipped as stale.
 
 ## Install
@@ -76,8 +84,8 @@ Three tiers — pick what you need:
 ```bash
 git clone <repo> counterfactual_kd && cd counterfactual_kd
 
-pip install -e .                 # CORE: numpy/stdlib only. Reproduce verdicts
-                                 #       from saved per-cell predictions. No torch, no OpenBackdoor.
+pip install -e .                 # CORE: numpy + scipy. Reproduce verdicts and the version-2
+                                 #       tables from saved predictions. No torch, no OpenBackdoor.
 
 pip install -e ".[repro]"        # + torch/transformers/datasets: retrain matched
                                  #   students from cached teachers, re-evaluate, rebuild the dashboard.
