@@ -1,244 +1,83 @@
 # counterfactual_kd
 
-**Matched audit of teacher-attributable backdoor transfer in knowledge distillation.**
+Matched teacher-replacement evaluation of backdoors in knowledge distillation.
 
-A high attack-success rate (ASR) on a distilled student does **not** imply the
-teacher's backdoor transferred. A single ASR number fuses three effects:
+This repository holds the code of the manuscript *Beyond Attack Success Rates in Backdoor
+Evaluation for Knowledge Distillation* (prepared for submission to IEEE Transactions on
+Information Forensics and Security). The per-input predictions, result tables and protocol
+snapshots are archived on Zenodo as version 2.0.0 of
+[10.5281/zenodo.21772216](https://doi.org/10.5281/zenodo.21772216) (this DOI resolves to the
+latest version).
 
-1. the clean model's baseline tendency to predict the target label,
-2. the raw **lexical pull** of the trigger phrase, and
-3. the **teacher-attributable** transfer of the planted mapping.
+## What is measured
 
-`counterfactual_kd` isolates (3) with a **four-condition matched protocol**: it pairs a
-student distilled from a *poisoned* teacher against a matched student distilled
-from a *clean* teacher under an identical corpus, optimizer, seed, and procedure,
-so any remaining gap is the teacher's alone. It reports one signed effect size
-(Cohen's *h*) with a **paired-bootstrap interval** and a **region-of-practical-
-equivalence (ROPE)** verdict — letting *no transfer* stand as a positive
-conclusion rather than a failed test.
+A high attack success rate (ASR) on a distilled student does not by itself identify the teacher
+as its source: the trigger may already fire on a clean teacher, and a contaminated distillation
+corpus can produce the backdoor without any teacher. For each condition, three students are
+trained on the same distillation corpus, student seed, recipe and evaluation inputs:
 
-This repository is the paper's public artifact: the measurement/reproduction
-pipeline **plus** the released ROPE dashboard and per-cell results, so other
-researchers can perform distillation-time backdoor evaluation with the confounders
-removed.
+- **P**, distilled from a backdoored teacher;
+- **C**, distilled from a trainer-matched clean teacher;
+- **R**, a teacher-free reference student trained on hard labels (`kd_type: ce`).
 
-> **No data or model weights are shipped.** Datasets (SST-2/AGNews) and base
-> models are downloaded on demand from the HuggingFace Hub, exactly like
-> OpenBackdoor. Only code, configs, and the lightweight result artifacts (the
-> ROPE dashboard CSV + per-cell prediction fixtures) live in the repo.
+On triggered inputs whose true label is not the target, the exposure A(M) is the rate at which
+student M predicts the target label, and the teacher-replacement contrast is k = A(P) − A(C)
+(`P_trig`, `C_trig` in the files). Verdicts compare paired intervals for k with tolerances
+δ ∈ {0.02, 0.05, 0.10}: repeated-seed cells pool the student-seed variance within a battery, and
+single-seed cells use a paired Tango score interval with transported variance.
 
-## Version 2 (November 2026)
+## Repository layout
 
-Version 2 is the companion code of the manuscript *Attack Success Rate Is Not
-Transfer: A Matched Audit of Teacher-Attributable Backdoor Effects in Knowledge
-Distillation* (under review).
-
-> **Correction of the v1 ATBA conclusion.** v1 (commits `d58c87e`, `3aced28`;
-> Zenodo v1.0 and v1.1) reported **no transfer** for ATBA, including the
-> Quickstart cell below. In the version-2 runs, ATBA transfers to every BERT
-> student: k = 0.135–0.189 (AG News and SST-2, logit and feature KD; POSITIVE at
-> δ = 0.05). The v1 ATBA conclusion is superseded. The v1 ATBA cells themselves,
-> re-decided under the version-2 rule, contain no positive cell, so the change
-> comes from the version-2 runs, not from the change of decision rule. The GPT-2
-> SST-2 and Qwen3 AG News logit-KD batteries (AddSent, BadNets) are NO TRANSFER
-> at δ = 0.05.
-
-What is new:
-
-- **Verdict on the rate difference.** The audit works on k = P_trig − C_trig
-  itself: a paired score interval (Tango; `counterfactual_kd/metrics/paired.py`),
-  tolerances δ ∈ {0.02, 0.05, 0.10}, equivalence (TOST) and directional tests,
-  pooling over student seeds 42–44, and one decision per (family, dataset, KD
-  type) battery — NO TRANSFER needs every attack's one-sided upper bound below δ,
-  TRANSFERS needs one Holm-adjusted positive (`counterfactual_kd/analysis/tifs.py`,
-  `scripts/tifs/analyze.py`). The v1 Cohen's-*h* ROPE verdict (`rope_verdict`,
-  Quickstart) is unchanged and still reproduces the v1 cells.
-- **More conditions.** CE-only reference student (`kd/ce.py`), hidden-state KD
-  (`kd/hidden.py`), RIPPLe and SynBkd attacks, whitespace-preserving triggers
-  (`triggers/whitespace.py`), evaluation-only control triggers
-  (`data/controls.py`), checkpoint and code fingerprints (`provenance.py`), and
-  the verdict calibration simulation (`analysis/calibration.py`).
-- **Experiment program.** `configs/tifs/` holds one YAML per run (`_dropped/`:
-  runs removed from the plan); `scripts/tifs/` generates the configs, schedules
-  the jobs and builds the result tables; `scripts/tifs/aux/g*/` are the
-  follow-up analyses, each with its own README. These scripts are provenance
-  copies: some default paths point to the authors' server, and section
-  references in docstrings (`docs/tifs_plan.md`, "TIFS addendum") point to
-  internal design notes that are not distributed.
-- **Per-input predictions** for every version-2 run, with the run configurations
-  and result tables, are archived as version 2.0 of the Zenodo record
-  [10.5281/zenodo.21772216](https://doi.org/10.5281/zenodo.21772216) (this DOI
-  resolves to the latest version). From the
-  archive root, `python scripts/tifs/analyze.py --out recomputed/` rebuilds the
-  result tables without a GPU or model weights (numpy and scipy).
-
-`tifs` in paths and run IDs is the internal name of the version-2 experiment
-program; the names are kept so that every archived result maps to its config
-and code. `pytest -q` runs `tests/`; four tests of the server job schedule
-(`scripts/tifs/queue_plan.py`) are skipped as stale.
+| Path | Content |
+|---|---|
+| `counterfactual_kd/` | Library: attacks, triggers, distillation objectives, evaluation, paired statistics (`analysis/tifs.py`, `metrics/paired.py`). |
+| `configs/tifs/` | Run configurations of the version-2 experiments (`_dropped/`: runs removed from the plan). |
+| `scripts/tifs/` | `analyze.py` (result tables), `make_configs.py`, job scheduling, and the follow-up analyses in `aux/g1`–`g12`. |
+| `tests/` | Unit tests. |
+| `configs/tier1_*.yaml`, `results/cells/`, `results/dashboard/`, `examples/`, `docs/`, `run.py` | Version-1 configurations, fixtures and documentation (Cohen's h / ROPE dashboard). The v1 verdicts are superseded; see below. |
 
 ## Install
 
-Three tiers — pick what you need:
+Python 3.10 or later.
 
 ```bash
-git clone <repo> counterfactual_kd && cd counterfactual_kd
-
-pip install -e .                 # CORE: numpy + scipy. Reproduce verdicts and the version-2
-                                 #       tables from saved predictions. No torch, no OpenBackdoor.
-
-pip install -e ".[repro]"        # + torch/transformers/datasets: retrain matched
-                                 #   students from cached teachers, re-evaluate, rebuild the dashboard.
-
-pip install -e ".[repro,teacher]"  # + OpenBackdoor: also retrain poisoned teachers from scratch.
+pip install -e .                     # library (numpy, scipy)
+pip install -e ".[repro]"            # training and evaluation: torch, transformers, datasets, ...
+pip install -e ".[teacher]"          # backdoored teachers via OpenBackdoor
 ```
 
-## Quickstart — reproduce a verdict (core, no training)
+## Recompute the result tables
 
-The CLI below applies the v1 rule (Cohen's *h*, ROPE ±0.2) to a bundled v1 cell;
-see [Version 2](#version-2-november-2026) for the current audit and the ATBA
-correction.
+Download and extract the Zenodo archive (version 2.0.0), then from its root:
 
 ```bash
-counterfactual_kd verdict --preds results/cells/atba_bert_sst2_logit_seed42.preds.json
-# or:  python run.py verdict --preds results/cells/atba_bert_sst2_logit_seed42.preds.json
-```
-```
-cell:        attack=atba family=bert dataset=sst2 kd_type=logit seed=42 corpus=atba_paperhp
-n:           211
-P_trig:      0.886   (poisoned-teacher student, triggered ASR)
-C_trig:      0.900   (clean-teacher student, lexical baseline)
-k = P-C:     -0.014   (matched, teacher-attributable difference)
-Cohen's h:   -0.046
-95% CI(h):   [-0.106, +0.000]
-P_transfer:  0.000   (Pr_boot[|h| > 0.2])
-VERDICT:     NO TRANSFER
-```
-An 88.6% triggered response that reads as "backdoor transferred", yet the matched
-clean-teacher student responds 90.0% — the gap is indistinguishable from zero.
-
-Use it as a library on your own paired hit vectors:
-```python
-import counterfactual_kd
-r = counterfactual_kd.rope_verdict(obs_hits, null_hits)   # 0/1 vectors: student fired the target?
-print(r["verdict"], r["h"], r["p_transfer"])
+python -B -X utf8 scripts/tifs/analyze.py --out recomputed/
 ```
 
-## Bring your own dataset / model
+This rebuilds the tables of `results/tifs/report/` (including the 31 fixed cells) from the
+per-input predictions on a CPU. The archive README describes every file.
 
-Adding a dataset or a model needs **no edits to library source**.
-
-**New dataset** — one call:
-```python
-from counterfactual_kd.datasets import register_dataset, generic_hf_loader
-
-# HuggingFace Hub, flat text/label schema:
-register_dataset("my_set", num_labels=2, target_label=1,
-                 loader_fn=generic_hf_loader("imdb", text_column="text", label_column="label"))
-# or a local corpus: pass your own loader_fn returning (train, dev, test) rows.
-```
-Then reference `my_set` under `datasets:` in any config. A runnable ~40-row **CPU**
-example is in [examples/toy_dataset/](examples/toy_dataset/), and
-`tests/test_generalization.py` proves a brand-new dataset plugs in end-to-end with
-no training, GPU, or OpenBackdoor. Full guide: [docs/ADDING_A_DATASET.md](docs/ADDING_A_DATASET.md).
-
-**New model** — any HF id whose family is recognized (bert / gpt2 / opt / llama /
-mistral / qwen\* / gemma / phi / …) goes straight under `pairs:` / `base_models:`; an
-unusual architecture takes a `models:` override block (family / is_decoder /
-lora_target_modules). Encoder-vs-decoder pooling is resolved from the HF config with
-a broad decoder-family allowlist, so new decoder families are pooled correctly rather
-than silently mis-pooled. Guide: [docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md).
-
-> Teacher poisoning (stage 0) delegates to OpenBackdoor, which supports bert/gpt2/opt
-> victims; new model families should use the FT-family methods (lora/qlora/sft, no
-> OpenBackdoor) or bring cached teachers. See [docs/ADAPTERS.md](docs/ADAPTERS.md).
-
-## Public artifact (v1 cells)
-
-```
-results/
-  dashboard/dashboard_rope.csv     # the released 88-cell ROPE dashboard (source of truth)
-  cells/*.preds.json               # per-cell predictions → reproduce each verdict standalone
-```
-`tests/test_standalone.py` proves every bundled cell reproduces its dashboard
-verdict with **no training and no OpenBackdoor** (`pytest tests/ -q`).
-
-## Reproduce from scratch (`[repro]` / `[teacher]`)
-
-> **Prerequisites, honestly stated.** A fresh clone with only the CORE install
-> (`pip install -e .`) already works for two things with zero extra setup: the
-> verdict path (`counterfactual_kd verdict --preds ...`, [Quickstart](#quickstart--reproduce-a-verdict-core-no-training)
-> above) and the toy-dataset generalization test
-> ([examples/toy_dataset/](examples/toy_dataset/), `tests/test_generalization.py`).
-> The full `repro → dashboard → tables` pipeline below is heavier: it needs the
-> `[repro]` extra (torch/transformers/datasets) in every case, **plus** one of
-> — (a) cached teachers on disk, to run `--stages stage1 stage2` only, or
-> (b) the `[teacher]` extra **and** OpenBackdoor **and** the OpenBackdoor
-> datasets checked out, to run stage 0 (poisoning/training teachers from
-> scratch). Skipping both (a) and (b) and still asking for stage 0 fails with
-> the explicit install hint shown below, not a silent no-op.
+## Train
 
 ```bash
-counterfactual_kd repro --config configs/example_verdict.yaml      # 4-condition matched run → ROPE verdict
-counterfactual_kd dashboard --runs-base ./results/runs --out ./results/dashboard/dashboard_rope.csv
-counterfactual_kd tables    --csv ./results/dashboard/dashboard_rope.csv
-```
-> **Two entry points.** `counterfactual_kd` (= `python run.py`) is the release CLI
-> — `verdict` / `dashboard` / `tables` / `repro`. The lower-level config runner is
-> `python -m counterfactual_kd {run,validate,show}`; `counterfactual_kd repro --config X`
-> simply forwards to `python -m counterfactual_kd run X`.
-
-### OpenBackdoor dependency
-
-counterfactual_kd needs [OpenBackdoor](https://github.com/thunlp/OpenBackdoor) for **one
-thing only**: poisoning and training the teachers (stage 0). It is deferred and
-isolated to a single module (`counterfactual_kd/adapters/openbackdoor.py`), so:
-
-| you want to… | install | OpenBackdoor needed? |
-|---|---|---|
-| reproduce a verdict from saved predictions | `.` (core) | no |
-| retrain matched **students** from **cached teachers** + re-evaluate | `.[repro]` | no |
-| retrain the poisoned/clean **teachers** from scratch (stage 0) | `.[repro,teacher]` | **yes** |
-
-> **Known issue in the first public commit (`d58c87e`).** An unanchored `data/`
-> ignore rule kept the code packages `counterfactual_kd/data/` and
-> `counterfactual_kd/datasets/` out of that commit. In that commit only the
-> verdict path (row 1) works; rows 2–3 stop with
-> `ModuleNotFoundError: counterfactual_kd.data`. Use a later commit, which ships
-> both packages. Cite a fixed commit rather than `main`.
->
-> **Precision.** Teachers are held in bf16 during distillation; students are
-> trained in the precision set by `stage1.student_dtype` (the paper's corpus
-> ablation uses fp32) and are always evaluated in bf16.
-
-So the common path — reproduce the measurement from cached teachers — never
-touches OpenBackdoor:
-
-```bash
-counterfactual_kd repro --config configs/example_verdict.yaml --stages stage1 stage2
+python -m counterfactual_kd run configs/tifs/<run_id>.yaml --run-id <run_id>
 ```
 
-Stage 0 imports OpenBackdoor lazily and, if it is missing, fails with an explicit
-install hint rather than a cryptic `ModuleNotFoundError`:
+Training needs GPUs; datasets and base models are downloaded from the Hugging Face Hub. Model
+weights are not distributed; backdoored checkpoints are available to researchers on request.
 
-```
-ImportError: Training a poisoned/clean teacher (stage0) requires OpenBackdoor...
-  Install it:  pip install -e ".[teacher]"
-  If you already have cached teachers, skip stage0 and run only the student
-  distillation + evaluation:  counterfactual_kd repro --config <cfg> --stages stage1 stage2
-```
+## Versions
 
-OpenBackdoor is kept in its **own** extra (not in `[repro]`) on purpose: it pins
-its own torch/transformers versions, so core/repro users never have to resolve its
-dependency tree.
+- **v2.0.0** (November 2026): the version-2 experiments and evaluation protocol. It corrects
+  defects of v1 (among them, the configured student learning rate was not passed to the
+  distillation trainer, and SST-2 evaluation inputs overlapped the teachers'
+  checkpoint-selection data) and supersedes v1 conclusions, including the v1 "no transfer"
+  result for ATBA. `RELEASE_NOTES_v2.md` in the Zenodo archive lists all changes.
+- **v1.0 / v1.1** (commits `d58c87e`, `3aced28`; Zenodo
+  [10.5281/zenodo.21782934](https://doi.org/10.5281/zenodo.21782934) and
+  [10.5281/zenodo.23105433](https://doi.org/10.5281/zenodo.23105433)): Cohen's h with
+  paired-bootstrap intervals and ROPE verdicts.
 
-## Method (one paragraph)
+## License
 
-For each condition we hold fixed `{poisoned teacher T_p, clean teacher T_c}` and
-train matched students `{S_p ← T_p, S_c ← T_c}` with identical data/optimizer/seed.
-On triggered non-target inputs we measure `P_trig` (S_p) and `C_trig` (S_c); the
-matched difference `k = P_trig − C_trig` is the teacher-attributable ATE. We map it
-to Cohen's *h*, take a paired percentile bootstrap (B=5000), and read a verdict off
-the HDI against a ROPE of ±0.2: **NO TRANSFER** (HDI ⊆ ROPE), **TRANSFER**
-(HDI excludes ROPE, graded by |h|), or **INCONCLUSIVE**. The scalar
-`P_transfer = Pr_boot[|h| > ROPE]` summarizes each cell.
+Code under the MIT License (`LICENSE`). The data in the Zenodo archive are under CC BY 4.0.
