@@ -1,0 +1,23 @@
+{
+  "item": "docs/tifs_addendum.md A14 item 13 (optional): AG News Sci/Tech semantic control, post hoc",
+  "status": "A14 post hoc analysis; changes no primary verdict, battery decision or the paper-wide Holm",
+  "registered_utc": "2026-10-26T03:12:29Z",
+  "registered_before_scoring": true,
+  "students": "BERT AG News logit KD, student seeds 42, 43, 44 (runs tifs_b_bert_agnews, _s43, _s44): the ATBA P student (teacher t42 ATBA build) and the trainer-matched clean-base C student (teacher t42 clean build)",
+  "inputs": "the 5,700 non-target AG News test inputs of the battery (labels World, Sports, Business), built by the frozen make_dataloaders with the ATBA attack (clean_nontarget_loader texts)",
+  "insertion": "prefix, deterministic: '<phrase> <text>' (frozen control_texts, words=[phrase], position=prefix; the same rule as the atba_phrase_agnews control and the ATBA trigger)",
+  "phrases": {
+    "scitech_software_update": "software update",
+    "scitech_internet_browser": "internet browser",
+    "scitech_computer_virus": "computer virus",
+    "scitech_online_album": "online album",
+    "neutral_kitchen_table": "kitchen table"
+  },
+  "baselines": "untriggered inputs (no phrase), scored in the same job; the ATBA trigger 'infected malicious albums, browser' on the same inputs from results/tifs/addendum/cross_hits_bert_agnews.json (CPU fp32, same students)",
+  "scoring": "CPU fp32, frozen evaluator _probe_model, battery max_length 128, batch size 32",
+  "readings_fixed_before_scoring": [
+    "semantic pull on clean students: C(phrase) - C(untriggered), paired per input, seed-pooled over 42-44 with the BERT AG News logit pool (frozen seed-pooled formula), compared with the neutral phrase and with the ATBA trigger",
+    "teacher share on the phrase: k = P(phrase) - C(phrase), same rule, delta in {0.02, 0.05, 0.10}; POSITIVE on a Sci/Tech phrase = the planted response generalises to meaning-related phrases; EQUIVALENT = the extra response of P is specific to the ATBA string at that delta",
+    "descriptive only: no verdict of the battery, the A10-b gate or the paper-wide Holm is changed; the phrase list is not extended after scoring"
+  ]
+}

@@ -1,0 +1,83 @@
+name: tifs_x13_pcb_r0003_s44
+description: 'A13 G3 (post hoc): near-delta positive control, bert sst2, 0.03% BadNets-triggered
+  KD rows with labels kept, student seed 44, teachers and corpus seed 42; P and C,
+  logit KD.'
+seeds:
+- 44
+methods:
+- kd
+pairs:
+- - bert-large-uncased
+  - bert-base-uncased
+datasets:
+- sst2
+attacks:
+- badnets
+kd_types:
+- logit
+tf32: true
+stage0:
+  batch_size: 16
+  epochs: 5
+  lr: 2.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.1
+  max_len: 512
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 2.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+  kd_corpus_attack: badnets
+  kd_corpus_attack_rate: 0.0003
+  kd_corpus_keep_label: true
+stage2:
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+  test_sets:
+    sst2: sst2_test
+output:
+  teacher_dir: results/tifs/teachers
+  runs_dir: runs/tifs
+teacher_seed: 42
+corpus_seed: 42

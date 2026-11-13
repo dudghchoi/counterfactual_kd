@@ -1,0 +1,146 @@
+id,part,kind,mem_gb,after,gpu_h
+tifs_x15_b1_bert_sst2_e1_s42__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e1_s42 tifs_rule_frozen,0.048
+tifs_x15_b1_bert_sst2_e1_s43__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e1_s43 tifs_rule_frozen,0.034
+tifs_x15_b1_bert_sst2_e1_s44__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e1_s44 tifs_rule_frozen,0.034
+tifs_x15_b1_bert_sst2_e4_s42__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e4_s42 tifs_rule_frozen,0.034
+tifs_x15_b1_bert_sst2_e4_s43__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e4_s43 tifs_rule_frozen,0.027
+tifs_x15_b1_bert_sst2_e4_s44__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e4_s44 tifs_rule_frozen,0.027
+tifs_x15_b1_bert_sst2_e5_s42__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e5_s42 tifs_rule_frozen,0.034
+tifs_x15_b1_bert_sst2_e5_s43__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e5_s43 tifs_rule_frozen,0.027
+tifs_x15_b1_bert_sst2_e5_s44__eval,b1,stage2,8,tifs_x15_b1_bert_sst2_e5_s44 tifs_rule_frozen,0.027
+tifs_x15_b1_gpt2_sst2_e5_s42__eval,b1,stage2,10,tifs_x15_b1_gpt2_sst2_e5_s42 tifs_rule_frozen,0.034
+tifs_x15_b1_gpt2_sst2_e5_s43__eval,b1,stage2,10,tifs_x15_b1_gpt2_sst2_e5_s43 tifs_rule_frozen,0.034
+tifs_x15_b1_gpt2_sst2_e5_s44__eval,b1,stage2,10,tifs_x15_b1_gpt2_sst2_e5_s44 tifs_rule_frozen,0.034
+tifs_x15_b1_qwen3_sst2_e3_s42__eval,b1,stage2,20,tifs_x15_b1_qwen3_sst2_e3_s42 tifs_rule_frozen,0.103
+tifs_x15_b1_qwen3_sst2_e3_s43__eval,b1,stage2,20,tifs_x15_b1_qwen3_sst2_e3_s43 tifs_rule_frozen,0.103
+tifs_x15_b1_qwen3_sst2_e3_s44__eval,b1,stage2,20,tifs_x15_b1_qwen3_sst2_e3_s44 tifs_rule_frozen,0.103
+tifs_x15_b2_bert_ref_t43_e4__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t43_e4 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t43_e5__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t43_e5 tifs_rule_frozen,0.034
+tifs_x15_b2_bert_ref_t44_e1__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t44_e1 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t44_e4__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t44_e4 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t44_e5__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t44_e5 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t45_e1__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t45_e1 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t45_e4__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t45_e4 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t45_e5__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t45_e5 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t46_e1__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t46_e1 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t46_e4__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t46_e4 tifs_rule_frozen,0.027
+tifs_x15_b2_bert_ref_t46_e5__eval,b2,stage2,8,tifs_x15_b2_bert_ref_t46_e5 tifs_rule_frozen,0.027
+tifs_x15_b2_a2_t43_e5_s43__eval,b2,stage2,8,tifs_x15_b2_a2_t43_e5_s43 tifs_rule_frozen,0.027
+tifs_x15_b2_a2_t43_e5_s44__eval,b2,stage2,8,tifs_x15_b2_a2_t43_e5_s44 tifs_rule_frozen,0.027
+tifs_x15_c_gpt2_atba_s42__eval,c,stage2,10,tifs_x15_c_gpt2_atba_s42 tifs_rule_frozen,0.034
+tifs_x15_c_gpt2_atba_s43__eval,c,stage2,10,tifs_x15_c_gpt2_atba_s43 tifs_rule_frozen,0.034
+tifs_x15_c_gpt2_atba_s44__eval,c,stage2,10,tifs_x15_c_gpt2_atba_s44 tifs_rule_frozen,0.034
+tifs_x15_d_bert_agnews_s45__eval,d,stage2,8,tifs_x15_d_bert_agnews_s45 tifs_rule_frozen,0.324
+tifs_x15_d_bert_agnews_s46__eval,d,stage2,8,tifs_x15_d_bert_agnews_s46 tifs_rule_frozen,0.324
+tifs_x15_e_bert_agnews_a08_s42__eval,e,stage2,8,tifs_x15_e_bert_agnews_a08_s42 tifs_rule_frozen,0.121
+tifs_x15_e_bert_agnews_a08_s43__eval,e,stage2,8,tifs_x15_e_bert_agnews_a08_s43 tifs_rule_frozen,0.121
+tifs_x15_e_bert_agnews_a08_s44__eval,e,stage2,8,tifs_x15_e_bert_agnews_a08_s44 tifs_rule_frozen,0.121
+tifs_x15_e_bert_agnews_a10_s42__eval,e,stage2,8,tifs_x15_e_bert_agnews_a10_s42 tifs_rule_frozen,0.121
+tifs_x15_e_bert_agnews_a10_s43__eval,e,stage2,8,tifs_x15_e_bert_agnews_a10_s43 tifs_rule_frozen,0.121
+tifs_x15_e_bert_agnews_a10_s44__eval,e,stage2,8,tifs_x15_e_bert_agnews_a10_s44 tifs_rule_frozen,0.121
+tifs_x15_e2_gpt2_sst2_a10_e2_s42__eval,e2,stage2,10,tifs_x15_e2_gpt2_sst2_a10_e2_s42 tifs_rule_frozen,0.034
+tifs_x15_e2_gpt2_sst2_a10_e2_s43__eval,e2,stage2,10,tifs_x15_e2_gpt2_sst2_a10_e2_s43 tifs_rule_frozen,0.034
+tifs_x15_e2_gpt2_sst2_a10_e2_s44__eval,e2,stage2,10,tifs_x15_e2_gpt2_sst2_a10_e2_s44 tifs_rule_frozen,0.034
+tifs_x15_e2_gpt2_sst2_a10_e5_s42__eval,e2,stage2,10,tifs_x15_e2_gpt2_sst2_a10_e5_s42 tifs_rule_frozen,0.034
+tifs_x15_e2_gpt2_sst2_a10_e5_s43__eval,e2,stage2,10,tifs_x15_e2_gpt2_sst2_a10_e5_s43 tifs_rule_frozen,0.034
+tifs_x15_e2_gpt2_sst2_a10_e5_s44__eval,e2,stage2,10,tifs_x15_e2_gpt2_sst2_a10_e5_s44 tifs_rule_frozen,0.034
+tifs_x15_b3_pcb_r0001_s42__eval,b3,stage2,8,tifs_x15_b3_pcb_r0001_s42 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0001_s43__eval,b3,stage2,8,tifs_x15_b3_pcb_r0001_s43 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0001_s44__eval,b3,stage2,8,tifs_x15_b3_pcb_r0001_s44 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0003_s42__eval,b3,stage2,8,tifs_x15_b3_pcb_r0003_s42 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0003_s43__eval,b3,stage2,8,tifs_x15_b3_pcb_r0003_s43 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0003_s44__eval,b3,stage2,8,tifs_x15_b3_pcb_r0003_s44 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0010_s42__eval,b3,stage2,8,tifs_x15_b3_pcb_r0010_s42 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0010_s43__eval,b3,stage2,8,tifs_x15_b3_pcb_r0010_s43 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0010_s44__eval,b3,stage2,8,tifs_x15_b3_pcb_r0010_s44 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0030_s42__eval,b3,stage2,8,tifs_x15_b3_pcb_r0030_s42 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0030_s43__eval,b3,stage2,8,tifs_x15_b3_pcb_r0030_s43 tifs_rule_frozen,0.027
+tifs_x15_b3_pcb_r0030_s44__eval,b3,stage2,8,tifs_x15_b3_pcb_r0030_s44 tifs_rule_frozen,0.027
+tifs_x15_ws__tifs_b_gpt2_sst2,a,cmd:ws_score.py,10,tifs_b_gpt2_sst2__eval,0.086
+tifs_x15_ws__tifs_b_gpt2_sst2_s43,a,cmd:ws_score.py,10,tifs_b_gpt2_sst2_s43__eval,0.058
+tifs_x15_ws__tifs_b_gpt2_sst2_s44,a,cmd:ws_score.py,10,tifs_b_gpt2_sst2_s44__eval,0.058
+tifs_x15_ws__tifs_b_qwen3_sst2,a,cmd:ws_score.py,20,tifs_b_qwen3_sst2__eval,0.196
+tifs_x15_ws__tifs_b_qwen3_sst2_s43,a,cmd:ws_score.py,20,tifs_b_qwen3_sst2_s43__eval,0.113
+tifs_x15_ws__tifs_b_qwen3_sst2_s44,a,cmd:ws_score.py,20,tifs_b_qwen3_sst2_s44__eval,0.113
+tifs_x15_ws__tifs_b_qwen3_agnews,a,cmd:ws_score.py,20,tifs_b_qwen3_agnews__eval,0.739
+tifs_x15_ws__tifs_x13_qwen3_agnews_s43,a,cmd:ws_score.py,20,tifs_x13_qwen3_agnews_s43__eval,0.385
+tifs_x15_ws__tifs_x13_qwen3_agnews_s44,a,cmd:ws_score.py,20,tifs_x13_qwen3_agnews_s44__eval,0.385
+tifs_x15_ws__tifs_g_qwen3_badnets10_s42,a,cmd:ws_score.py,20,tifs_g_qwen3_badnets10_s42__eval,0.44
+tifs_x15_ws__tifs_aa_qwen3_badnets10_t43,a,cmd:ws_score.py,20,tifs_aa_qwen3_badnets10_t43__eval,0.058
+tifs_x15_ws__tifs_b_bert_sst2,a,cmd:ws_score.py,8,tifs_b_bert_sst2__eval,0.158
+tifs_x15_bt_bert_sst2_t42,b1,stage0,34,,0.638
+tifs_x15_bt_gpt2_sst2_t42,b1,stage0,72,,1.276
+tifs_x15_bt_qwen3_sst2_t42,b1,stage0,66,,1.874
+tifs_x15_twincheck_ob_bert-large_sst-2_seed42,b1,cmd:check_twin.py,0,tifs_x15_bt_bert_sst2_t42,0.05
+tifs_x15_twincheck_ob_gpt2-xl_sst-2_seed42,b1,cmd:check_twin.py,0,tifs_x15_bt_gpt2_sst2_t42,0.15
+tifs_x15_twincheck_ob_Qwen3-1.7B_sst-2_seed42,b1,cmd:check_twin.py,0,tifs_x15_bt_qwen3_sst2_t42,0.15
+tifs_x15_b1_bert_sst2_e1_s42,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.825
+tifs_x15_b1_bert_sst2_e1_s43,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.414
+tifs_x15_b1_bert_sst2_e1_s44,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.414
+tifs_x15_b1_bert_sst2_e4_s42,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.825
+tifs_x15_b1_bert_sst2_e4_s43,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.414
+tifs_x15_b1_bert_sst2_e4_s44,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.414
+tifs_x15_b1_bert_sst2_e5_s42,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.825
+tifs_x15_b1_bert_sst2_e5_s43,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.414
+tifs_x15_b1_bert_sst2_e5_s44,b1,stage1,6,tifs_x15_bt_bert_sst2_t42,0.414
+tifs_x15_b1_gpt2_sst2_e5_s42,b1,stage1,10,tifs_x15_bt_gpt2_sst2_t42,0.613
+tifs_x15_b1_gpt2_sst2_e5_s43,b1,stage1,10,tifs_x15_bt_gpt2_sst2_t42,0.613
+tifs_x15_b1_gpt2_sst2_e5_s44,b1,stage1,10,tifs_x15_bt_gpt2_sst2_t42,0.613
+tifs_x15_b1_qwen3_sst2_e3_s42,b1,stage1,28,tifs_x15_bt_qwen3_sst2_t42,1.288
+tifs_x15_b1_qwen3_sst2_e3_s43,b1,stage1,28,tifs_x15_bt_qwen3_sst2_t42,1.288
+tifs_x15_b1_qwen3_sst2_e3_s44,b1,stage1,28,tifs_x15_bt_qwen3_sst2_t42,1.288
+tifs_x15_bt_bert_sst2_t43,b2,stage0,34,tifs_x15_bt_bert_sst2_t42,0.638
+tifs_x15_bt_bert_sst2_t44,b2,stage0,34,tifs_x15_bt_bert_sst2_t43,0.638
+tifs_x15_bt_bert_sst2_t45,b2,stage0,34,tifs_x15_bt_bert_sst2_t44,0.638
+tifs_x15_bt_bert_sst2_t46,b2,stage0,34,tifs_x15_bt_bert_sst2_t45,0.638
+tifs_x15_twincheck_ob_bert-large_sst-2_seed43,b2,cmd:check_twin.py,0,tifs_x15_bt_bert_sst2_t43,0.05
+tifs_x15_twincheck_ob_bert-large_sst-2_seed44,b2,cmd:check_twin.py,0,tifs_x15_bt_bert_sst2_t44,0.05
+tifs_x15_twincheck_ob_bert-large_sst-2_seed45,b2,cmd:check_twin.py,0,tifs_x15_bt_bert_sst2_t45,0.05
+tifs_x15_twincheck_ob_bert-large_sst-2_seed46,b2,cmd:check_twin.py,0,tifs_x15_bt_bert_sst2_t46 tifs_x13_bert_ref_t46_teachers,0.05
+tifs_x15_b2_bert_ref_t43_e4,b2,stage1,6,tifs_x15_bt_bert_sst2_t43,0.414
+tifs_x15_b2_bert_ref_t43_e5,b2,stage1,6,tifs_x15_bt_bert_sst2_t43,0.414
+tifs_x15_b2_bert_ref_t44_e1,b2,stage1,6,tifs_x15_bt_bert_sst2_t44,0.414
+tifs_x15_b2_bert_ref_t44_e4,b2,stage1,6,tifs_x15_bt_bert_sst2_t44,0.414
+tifs_x15_b2_bert_ref_t44_e5,b2,stage1,6,tifs_x15_bt_bert_sst2_t44,0.414
+tifs_x15_b2_bert_ref_t45_e1,b2,stage1,6,tifs_x15_bt_bert_sst2_t45 tifs_x13_bert_ref_t45,0.414
+tifs_x15_b2_bert_ref_t45_e4,b2,stage1,6,tifs_x15_bt_bert_sst2_t45 tifs_x13_bert_ref_t45,0.414
+tifs_x15_b2_bert_ref_t45_e5,b2,stage1,6,tifs_x15_bt_bert_sst2_t45 tifs_x13_bert_ref_t45,0.414
+tifs_x15_b2_bert_ref_t46_e1,b2,stage1,6,tifs_x15_bt_bert_sst2_t46 tifs_x13_bert_ref_t46,0.414
+tifs_x15_b2_bert_ref_t46_e4,b2,stage1,6,tifs_x15_bt_bert_sst2_t46 tifs_x13_bert_ref_t46,0.414
+tifs_x15_b2_bert_ref_t46_e5,b2,stage1,6,tifs_x15_bt_bert_sst2_t46 tifs_x13_bert_ref_t46,0.414
+tifs_x15_b2_a2_t43_e5_s43,b2,stage1,6,tifs_x15_bt_bert_sst2_t43,0.414
+tifs_x15_b2_a2_t43_e5_s44,b2,stage1,6,tifs_x15_bt_bert_sst2_t43,0.414
+tifs_x15_ct_gpt2_atba_sst2_t42,c,stage0,72,tifs_x15_bt_gpt2_sst2_t42,1.276
+tifs_x15_c_gate,c,cmd:gate_c.py,10,tifs_x15_ct_gpt2_atba_sst2_t42 tifs_x15_bt_gpt2_sst2_t42,0.05
+tifs_x15_c_gpt2_atba_s42,c,stage1,10,tifs_x15_ct_gpt2_atba_sst2_t42 tifs_x15_c_gate tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_c_gpt2_atba_s43,c,stage1,10,tifs_x15_ct_gpt2_atba_sst2_t42 tifs_x15_c_gate tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_c_gpt2_atba_s44,c,stage1,10,tifs_x15_ct_gpt2_atba_sst2_t42 tifs_x15_c_gate tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_ws__tifs_x15_c_gpt2_atba_s42,c,cmd:ws_score.py,10,tifs_x15_c_gpt2_atba_s42__eval,0.044
+tifs_x15_ws__tifs_x15_c_gpt2_atba_s43,c,cmd:ws_score.py,10,tifs_x15_c_gpt2_atba_s43__eval,0.044
+tifs_x15_ws__tifs_x15_c_gpt2_atba_s44,c,cmd:ws_score.py,10,tifs_x15_c_gpt2_atba_s44__eval,0.044
+tifs_x15_d_bert_agnews_s45,d,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,6.099
+tifs_x15_d_bert_agnews_s46,d,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,6.099
+tifs_x15_e_bert_agnews_a08_s42,e,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,2.046
+tifs_x15_e_bert_agnews_a08_s43,e,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,2.046
+tifs_x15_e_bert_agnews_a08_s44,e,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,2.046
+tifs_x15_e_bert_agnews_a10_s42,e,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,2.046
+tifs_x15_e_bert_agnews_a10_s43,e,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,2.046
+tifs_x15_e_bert_agnews_a10_s44,e,stage1,6,tifs_t_bert tifs_ts_bert tifs_tb_bert,2.046
+tifs_x15_e2_gpt2_sst2_a10_e2_s42,e2,stage1,10,tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_e2_gpt2_sst2_a10_e2_s43,e2,stage1,10,tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_e2_gpt2_sst2_a10_e2_s44,e2,stage1,10,tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_e2_gpt2_sst2_a10_e5_s42,e2,stage1,10,tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_e2_gpt2_sst2_a10_e5_s43,e2,stage1,10,tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_e2_gpt2_sst2_a10_e5_s44,e2,stage1,10,tifs_x15_bt_gpt2_sst2_t42,1.206
+tifs_x15_b3_pcb_r0001_s42,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0001_s42 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0001_s43,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0001_s43 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0001_s44,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0001_s44 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0003_s42,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0003_s42 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0003_s43,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0003_s43 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0003_s44,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0003_s44 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0010_s42,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0010_s42 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0010_s43,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0010_s43 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0010_s44,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0010_s44 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0030_s42,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0030_s42 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0030_s43,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0030_s43 tifs_x15_b3_go,0.414
+tifs_x15_b3_pcb_r0030_s44,b3,stage1,6,tifs_x15_bt_bert_sst2_t42 tifs_x13_pcb_r0030_s44 tifs_x15_b3_go,0.414

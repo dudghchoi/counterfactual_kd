@@ -41,7 +41,7 @@ def infer_metadata_from_filename(fname: str) -> dict:
         parts = parts[1:]
 
     last = parts[-1].lower()
-    if last in ("sst2", "agnews", "imdb", "hsol", "cr"):
+    if last in ("sst2", "agnews", "imdb", "hsol", "hsolb", "cr"):
         meta["dataset"] = last
         parts = parts[:-1]
 

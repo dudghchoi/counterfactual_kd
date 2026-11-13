@@ -5,6 +5,7 @@ def __getattr__(name):
         "LogitKD": ("counterfactual_kd.kd.logit", "LogitKD"),
         "FeatureKD": ("counterfactual_kd.kd.feature", "FeatureKD"),
         "AttentionKD": ("counterfactual_kd.kd.attention", "AttentionKD"),
+        "HiddenStateKD": ("counterfactual_kd.kd.hidden", "HiddenStateKD"),
         "KD_METHODS": ("counterfactual_kd.kd.registry", "KD_METHODS"),
         "load_kd": ("counterfactual_kd.kd.registry", "load_kd"),
     }

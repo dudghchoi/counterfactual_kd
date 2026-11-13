@@ -41,10 +41,10 @@ LEGACY_ATTACK_TRAINER = {
 }
 
 LEGACY_DATASET_NUM_LABELS = {
-    "sst2": 2, "agnews": 4, "imdb": 2, "hsol": 3, "cr": 2, "mr": 2,
+    "sst2": 2, "agnews": 4, "imdb": 2, "hsol": 3, "hsolb": 2, "cr": 2, "mr": 2,
 }
 LEGACY_DATASET_TARGET_LABELS = {
-    "sst2": 1, "agnews": 3, "imdb": 0, "hsol": 1, "cr": 1, "mr": 1,
+    "sst2": 1, "agnews": 3, "imdb": 0, "hsol": 1, "hsolb": 0, "cr": 1, "mr": 1,
 }
 
 
@@ -110,6 +110,16 @@ def test_teacher_path_scheme():
         "results/teachers", "insertsent", "gpt2-xl", "agnews", 123
     ) == "results/teachers/poisoned/ob_addsent_gpt2-xl_agnews_seed123"
 
+    # RIPPLe uses the badnets poisoner with its own trainer: it must not
+    # resolve to the BadNets teacher, or Stage 0 skips training it.
+    assert teacher_poisoned_path(
+        "results/teachers", "ripple", "bert-large-uncased", "sst2", 42
+    ) == "results/teachers/poisoned/ob_ripples_badnets_bert-large_sst-2_seed42"
+    for attack in ("ep", "sos", "atba", "synbkd", "addsent"):
+        assert teacher_poisoned_path(
+            "results/teachers", attack, "bert-large-uncased", "sst2", 42
+        ) == f"results/teachers/poisoned/ob_{attack}_bert-large_sst-2_seed42"
+
     # base trainer clean — no trainer prefix.
     assert teacher_clean_path(
         "results/teachers", "badnets", "bert-large-uncased", "sst2", 42
@@ -127,7 +137,7 @@ def test_teacher_path_scheme():
 def test_kd_methods_complete():
     # Stage 1 iterates KD_METHODS — new methods must be added here and
     # in counterfactual_kd.kd.registry together.
-    assert set(KD_METHODS) == {"logit", "feature", "attention"}
+    assert set(KD_METHODS) == {"logit", "feature", "attention", "ce", "hidden"}
 
 
 def test_unknown_attack_raises():
@@ -142,4 +152,4 @@ def test_unknown_dataset_raises():
 
 def test_deferred_attack_blocked_from_build():
     with pytest.raises(NotImplementedError):
-        build_attack("synbkd", target_label=1)
+        build_attack("stylebkd", target_label=1)

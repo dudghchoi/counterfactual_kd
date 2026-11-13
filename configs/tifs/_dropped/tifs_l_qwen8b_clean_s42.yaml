@@ -1,0 +1,76 @@
+name: tifs_l_qwen8b_clean_s42
+description: E6 KD Qwen3-8B (LoRA-merged teacher) -> Qwen3-1.7B, corpus=clean.
+seeds:
+- 42
+methods:
+- kd
+pairs:
+- - Qwen/Qwen3-8B
+  - Qwen/Qwen3-1.7B
+datasets:
+- sst2
+- agnews
+attacks:
+- badnets
+kd_types:
+- logit
+- ce
+tf32: true
+stage0:
+  batch_size: 8
+  epochs: 3
+  lr: 1.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 1
+  poison_rate: 0.1
+  max_len: 512
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 1.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+stage2:
+  batch_size: 16
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - mb
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - mb
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+output:
+  teacher_dir: results/tifs/teachers
+  runs_dir: runs/tifs

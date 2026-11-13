@@ -14,6 +14,10 @@ def export_csv(results: list[CFResult], path: str):
         "asr_obs", "asr_null", "asr_true", "bsr",
         "teacher_asr", "teacher_asr_null", "teacher_asr_true", "teacher_bsr",
         "ca_poisoned", "ca_clean", "verdict",
+        # Appended so existing column positions are unchanged.
+        "teacher_seed", "corpus_seed", "student_seed", "n_eval",
+        "p_clean", "c_clean", "delta_b", "k_star", "teacher_ca",
+        "teacher_ca_null",
     ]
     with open(path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields)

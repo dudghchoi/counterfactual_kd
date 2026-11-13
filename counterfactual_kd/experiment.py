@@ -94,11 +94,13 @@ class Experiment:
         """
         self.config.validate()
         self.prepare(resume=resume)
+        _set_tf32(self.config.tf32)
 
         want = set(stages) if stages else {s.name for s in self._stages}
         manifest: dict = {
             "run_id": self.run_id,
             "config_name": self.config.name,
+            "tf32": self.config.tf32,
             "started": datetime.now().isoformat(timespec="seconds"),
             "stages": {},
         }
@@ -125,6 +127,16 @@ class Experiment:
         with open(os.path.join(self.run_dir, "manifest.json"), "w") as f:
             json.dump(manifest, f, indent=2, default=str)
         return manifest
+
+
+def _set_tf32(enabled: bool) -> None:
+    """Enable TF32 matmuls when the config asks for it. When it does not,
+    PyTorch's defaults are left untouched (the historical numerics)."""
+    if not enabled:
+        return
+    import torch
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
 
 
 def _summarize(result: StageResult, elapsed_sec: float) -> dict:

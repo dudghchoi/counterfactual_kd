@@ -82,6 +82,17 @@ class BaseAttack:
 
     def poison_train(self, data: list[tuple]) -> list[tuple]:
         """Poison a fraction of training data. Returns mixed dataset."""
+        return self.poison_train_sources(data)[0]
+
+    def poison_train_sources(self, data: list[tuple]) -> tuple[list[tuple], list[int]]:
+        """``poison_train`` plus the input row each output row's text came from.
+
+        The triggered texts are built in set order and written back in row
+        order, so a flagged row usually holds another flagged row's text.
+        A label-poisoned corpus does not depend on which (every flagged row
+        gets the target label); a label-kept corpus needs each text's own
+        label.
+        """
         poison_num = int(self.poison_rate * len(data))
 
         if self.label_consistency:
@@ -94,18 +105,21 @@ class BaseAttack:
         random.shuffle(candidates)
         poison_num = min(poison_num, len(candidates))
         poison_indices = set(candidates[:poison_num])
+        order = list(poison_indices)
 
-        poisoned = self.poison_all([data[i] for i in poison_indices])
+        poisoned = self.poison_all([data[i] for i in order])
 
-        result = []
+        result, sources = [], []
         pi = 0
         for i, d in enumerate(data):
             if i in poison_indices:
                 result.append(poisoned[pi])
+                sources.append(order[pi])
                 pi += 1
             else:
                 result.append(d)
-        return result
+                sources.append(i)
+        return result, sources
 
     def poison_eval(self, data: list[tuple]) -> dict:
         """Create evaluation splits with triggered data."""

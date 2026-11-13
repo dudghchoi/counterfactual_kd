@@ -106,6 +106,17 @@ _ATTACK_LIST: list[AttackSpec] = [
         trigger_kwargs={"words": ["friends", "weekend", "store"]},
         method_families=ALL_KD_FAMILIES,
     ),
+    # RIPPLe (Kurita et al., ACL 2020) — restricted inner-product weight
+    # poisoning. No dedicated OB poisoner: OB's own ripple_config.json pairs
+    # the "ripples" trainer with plain "badnets" data poisoning, so ob_name
+    # and trainer intentionally differ (build_ob_config reads them separately).
+    AttackSpec(
+        name="ripple",
+        ob_name="badnets",
+        trainer="ripples",
+        trigger_kwargs={"words": ["cf", "mn", "bb", "tq"]},
+        method_families=ALL_KD_FAMILIES,
+    ),
     AttackSpec(
         name="atba",
         ob_name="atba",
@@ -115,7 +126,7 @@ _ATTACK_LIST: list[AttackSpec] = [
     ),
     # ── Round 2+ deferred (KD) ───────────────────────────────────────
     AttackSpec(name="synbkd",  ob_name="synbkd",  trainer="base",
-               deferred=True, method_families=ALL_KD_FAMILIES),
+               method_families=ALL_KD_FAMILIES),
     AttackSpec(name="stylebkd", ob_name="stylebkd", trainer="base",
                deferred=True, method_families=ALL_KD_FAMILIES),
     # ── TIER 2 FT-family (NAACL 2024) ────────────────────────────────
@@ -214,6 +225,7 @@ _DATASET_LIST: list[DatasetSpec] = [
     DatasetSpec("agnews", "agnews", num_labels=4, target_label=3),
     DatasetSpec("imdb",   "imdb",   num_labels=2, target_label=0),
     DatasetSpec("hsol",   "hsol",   num_labels=3, target_label=1),
+    DatasetSpec("hsolb",  "hsol",   num_labels=2, target_label=0),
     DatasetSpec("cr",     "cr",     num_labels=2, target_label=1),
     DatasetSpec("mr",     "mr",     num_labels=2, target_label=1),
     # Vicomtech hate-speech (de Gibert et al., ALW2 2018; W18-5102).
@@ -302,7 +314,11 @@ def model_short(name: str) -> str:
 
 # ── KD methods ───────────────────────────────────────────────────────
 
-KD_METHODS: tuple[str, ...] = ("logit", "feature", "attention")
+# ``ce`` is the no-teacher reference: one student trained on the corpus
+# labels alone, shared by both lineages of a condition (TIFS plan E1).
+# ``hidden`` is logit KD plus TinyBERT-style hidden-state distillation over
+# uniformly mapped layers (TIFS addendum A8).
+KD_METHODS: tuple[str, ...] = ("logit", "feature", "attention", "ce", "hidden")
 
 
 def kd_methods() -> tuple[str, ...]:
@@ -435,10 +451,19 @@ def load_trainer(method: str):
 
 def teacher_poisoned_path(teacher_dir: str, attack: str, model: str,
                           dataset: str, seed: int) -> str:
+    """Poisoned teacher path, named by OB poisoner.
+
+    An attack that pairs another attack's poisoner with its own trainer
+    (RIPPLe: ``badnets`` data with the ``ripples`` trainer) is prefixed
+    with that trainer, so Stage 0 never mistakes the poisoner's
+    base-trainer teacher for it and skips training.
+    """
     import os
+    ob, trainer = ob_attack_name(attack), attack_trainer(attack)
+    name = ob if trainer in ("base", ob) else f"{trainer}_{ob}"
     return os.path.join(
         teacher_dir, "poisoned",
-        f"ob_{ob_attack_name(attack)}_{model_short(model)}_"
+        f"ob_{name}_{model_short(model)}_"
         f"{dataset_ob_name(dataset)}_seed{seed}",
     )
 
@@ -457,3 +482,39 @@ def teacher_clean_path(teacher_dir: str, attack: str, model: str,
     base = f"{model_short(model)}_{dataset_ob_name(dataset)}_seed{seed}"
     name = f"ob_{base}" if trainer == "base" else f"ob_{trainer}_{base}"
     return os.path.join(teacher_dir, "clean", name)
+
+
+# ── Per-epoch teacher checkpoints (TIFS addendum A15-b) ──────────────
+#
+# With ``stage0.save_every_epoch`` Stage 0 also writes every epoch's
+# weights under ``<teacher>/epochs/epoch<e>/`` and the selection record
+# ``<teacher>/epochs.json`` (OpenBackdoor-selected and accuracy-only epoch,
+# per-epoch dev metrics and weight hashes). The OB-selected checkpoint
+# stays at ``<teacher>/`` as before.
+
+TEACHER_EPOCHS_DIR = "epochs"
+TEACHER_EPOCHS_RECORD = "epochs.json"
+
+
+def teacher_epoch_path(teacher_path: str, epoch: int) -> str:
+    """Checkpoint of epoch ``epoch`` (1-based) of a teacher saved with
+    ``stage0.save_every_epoch``."""
+    import os
+    return os.path.join(teacher_path, TEACHER_EPOCHS_DIR, f"epoch{int(epoch)}")
+
+
+def teacher_epochs_record(teacher_path: str) -> dict:
+    """The ``epochs.json`` record of a teacher saved with every epoch."""
+    import json
+    import os
+    path = os.path.join(teacher_path, TEACHER_EPOCHS_RECORD)
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"{path}: teacher was not built with stage0.save_every_epoch")
+    with open(path) as f:
+        return json.load(f)
+
+
+def teacher_selected_epoch(teacher_path: str) -> int:
+    """The epoch OpenBackdoor's 'best' rule saved at ``teacher_path``."""
+    return int(teacher_epochs_record(teacher_path)["ob_selected_epoch"])

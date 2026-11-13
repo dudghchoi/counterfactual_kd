@@ -36,18 +36,25 @@ class CFResult:
     kd_type: str = ""
     source: str = ""
     seed: int = -1
+    # Seed decoupling: -1 = not recorded (runs before the split; all equal ``seed``).
+    teacher_seed: int = -1
+    corpus_seed: int = -1
+    student_seed: int = -1
 
     # --- Student-level raw measurements ---
     asr_obs: float = 0.0          # P_trig
     asr_null: float = 0.0         # C_trig
     c_clean: float = -1.0         # C_clean (b). -1 sentinel = legacy run, not measured.
+    p_clean: float = -1.0         # P_clean. -1 sentinel = not measured.
     ca_poisoned: float = 0.0
     ca_clean: float = 0.0
+    n_eval: int = -1              # non-target evaluation inputs (-1 = not recorded)
 
     # --- Teacher-level raw measurements ---
     teacher_asr: float = 0.0
     teacher_asr_null: float = 0.0
     teacher_ca: float = 0.0
+    teacher_ca_null: float = 0.0  # clean teacher's clean accuracy
 
     # --- Computed metrics ---
     asr_true: float = 0.0
@@ -56,6 +63,10 @@ class CFResult:
     b_component: float = 0.0      # = c_clean
     l_component: float = 0.0      # = asr_null - c_clean (trigger lex pull)
     k_component: float = 0.0      # = asr_obs - asr_null (= asr_true)
+    # Untriggered lineage shift and trigger-conditional contrast (needs both
+    # p_clean and c_clean): k = delta_b + k_star.
+    delta_b: float | None = None  # = p_clean - c_clean
+    k_star: float | None = None   # = (asr_obs - p_clean) - (asr_null - c_clean)
     teacher_asr_true: float = 0.0
     teacher_bsr: float = 0.0
     verdict: str = ""
@@ -75,6 +86,10 @@ class CFResult:
             self.b_component = self.c_clean
             self.l_component = self.asr_null - self.c_clean
             self.k_component = self.asr_obs - self.asr_null
+        if self.c_clean >= 0.0 and self.p_clean >= 0.0:
+            self.delta_b = self.p_clean - self.c_clean
+            self.k_star = ((self.asr_obs - self.p_clean)
+                           - (self.asr_null - self.c_clean))
 
         self.teacher_asr_true = self.teacher_asr - self.teacher_asr_null
         self.teacher_bsr = (

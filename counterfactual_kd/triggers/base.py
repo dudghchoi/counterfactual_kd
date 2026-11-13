@@ -15,6 +15,11 @@ class BaseTrigger(ABC):
     """
 
     name: str = "base"
+    # TIFS addendum A15-a: splice the trigger into the original string
+    # instead of re-joining ``text.split()`` (same random draws, same word
+    # index; see ``counterfactual_kd.triggers.whitespace``). Off by default,
+    # which is the historical behaviour.
+    preserve_whitespace: bool = False
 
     @abstractmethod
     def insert(self, text: str) -> str:

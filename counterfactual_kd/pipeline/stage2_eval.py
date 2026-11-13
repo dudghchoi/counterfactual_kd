@@ -33,6 +33,9 @@ class Stage2Evaluation(Stage):
         from counterfactual_kd.metrics.result import CFResult
 
         result = StageResult(stage_name=self.name)
+        if getattr(config.stage2, "record_provenance", False):
+            from counterfactual_kd.provenance import code_fingerprint
+            code_fingerprint()  # A15: fix the fingerprint at stage start
         results_root = os.path.join(run_dir, "artifacts", "results")
         students_root = os.path.join(run_dir, "artifacts", "students")
         os.makedirs(results_root, exist_ok=True)
@@ -40,7 +43,7 @@ class Stage2Evaluation(Stage):
 
         all_results: list = []
         for cond in config.conditions():
-            tag, poisoned, clean = _locate_student_pair(cond, students_root)
+            tag, poisoned, clean = _locate_student_pair(cond, students_root, config)
             result_path = os.path.join(results_root, f"{tag}.json")
 
             if skip_existing and os.path.exists(result_path):
@@ -155,16 +158,34 @@ class Stage2Evaluation(Stage):
             overrides = {**overrides, "model_family": family, "dataset": dataset}
         attack = build_attack(attack_name, target_label=dspec.target_label, **overrides)
 
-        p_teacher = teacher_poisoned_path(
-            config.output.teacher_dir, attack_name, teacher_model, dataset, seed)
-        c_teacher = teacher_clean_path(
-            config.output.teacher_dir, attack_name, teacher_model, dataset, seed)
+        from counterfactual_kd.pipeline.stage1_kd import condition_seeds, teacher_pair_paths
+        seeds = condition_seeds(cond)
+        p_teacher, c_teacher = teacher_pair_paths(
+            config, attack_name, teacher_model, dataset, seeds["teacher_seed"])
+        if kd_type == "ce":
+            # A teacher-free run may not have trained the teachers; their
+            # trigger response is recorded only when they exist.
+            p_teacher = p_teacher if os.path.isdir(p_teacher) else None
+            c_teacher = c_teacher if os.path.isdir(c_teacher) else None
 
-        tag = os.path.basename(os.path.dirname(poisoned))
+        # Named after the result file, not the student dir: the ``ce``
+        # student dir is shared by every attack of the run.
+        tag = os.path.splitext(os.path.basename(result_path))[0]
         preds_path = (
             os.path.join(os.path.dirname(result_path), f"{tag}.preds.json")
             if config.stage2.save_preds else None
         )
+
+        # A15 (stage2.record_provenance, off by default): what the preds came from.
+        extra = {}
+        if getattr(config.stage2, "record_provenance", False):
+            extra["provenance"] = {
+                "run_config": config.name, "tag": tag,
+                "poisoned_student": poisoned, "clean_student": clean,
+                "poisoned_teacher": p_teacher, "clean_teacher": c_teacher,
+                "clean_teacher_epoch": getattr(config.stage1, "clean_teacher_epoch", None),
+                "poisoned_student_run": getattr(config.stage1, "poisoned_student_run", None),
+            }
 
         print(f"[Stage2] {tag}")
         r = evaluate_model_pair(
@@ -186,6 +207,13 @@ class Stage2Evaluation(Stage):
             poisoned_teacher_path=p_teacher,
             clean_teacher_path=c_teacher,
             preds_out_path=preds_path,
+            eval_dtype=getattr(config.stage2, "eval_dtype", "bf16"),
+            control_triggers=getattr(config.stage2, "control_triggers", None),
+            test_set=(getattr(config.stage2, "test_sets", None) or {}).get(dataset),
+            teacher_seed=seeds["teacher_seed"],
+            corpus_seed=seeds["corpus_seed"],
+            student_seed=seeds["student_seed"],
+            **extra,
         )
         r.to_json(result_path)
         print(f"  BSR={r.bsr:.3f} verdict={r.verdict}")
@@ -286,18 +314,22 @@ class Stage2Evaluation(Stage):
             poisoned_teacher_path=None,
             clean_teacher_path=None,
             preds_out_path=preds_path,
+            test_set=(getattr(config.stage2, "test_sets", None) or {}).get(dataset),
         )
         r.to_json(result_path)
         print(f"  BSR={r.bsr:.3f} verdict={r.verdict}")
         return r
 
 
-def _locate_student_pair(cond: dict, students_root: str) -> tuple[str, str, str]:
+def _locate_student_pair(cond: dict, students_root: str,
+                         config=None) -> tuple[str, str, str]:
     """Rebuild the same tag Stage 1 wrote, so Stage 2 can find students.
 
     Mirrors ``counterfactual_kd.pipeline.stage1_kd._tag`` (KD-family) and
     ``counterfactual_kd.trainers._ft_common.ft_tag`` (FT-family) — keep them
-    synchronized with their respective Stage 1 writers.
+    synchronized with their respective Stage 1 writers. With ``config``
+    whose ``stage1.poisoned_student_run`` is set (A15), the poisoned
+    student is the other run's, as in Stage 1.
     """
     if not method_spec(cond["method"]).needs_pairs:
         from counterfactual_kd.trainers._ft_common import ft_paths
@@ -322,7 +354,25 @@ def _locate_student_pair(cond: dict, students_root: str) -> tuple[str, str, str]
         overrides = {"model_family": family, "dataset": dataset}
     attack = build_attack(attack_name, target_label=dspec.target_label, **overrides)
 
-    from counterfactual_kd.pipeline.stage1_kd import _tag
-    tag = _tag(attack_name, attack, kd_type, family, student_short, dataset, seed)
-    student_dir = os.path.join(students_root, tag)
-    return tag, os.path.join(student_dir, "poisoned_student"), os.path.join(student_dir, "clean_student")
+    from counterfactual_kd.pipeline.stage1_kd import (
+        _tag, clean_student_path, condition_seeds, student_dir_tag,
+    )
+    seeds = condition_seeds(cond)
+    tag = _tag(attack_name, attack, kd_type, family, student_short, dataset,
+               seed, seeds)
+    student_dir = os.path.join(
+        students_root,
+        student_dir_tag(attack_name, attack, kd_type, family, student_short,
+                        dataset, seed, seeds),
+    )
+    if kd_type == "ce":
+        ce_path = os.path.join(student_dir, "ce_student")
+        return tag, ce_path, ce_path
+    clean = clean_student_path(students_root, attack_name, attack, kd_type,
+                               family, student_short, dataset, seed, seeds)
+    poisoned = os.path.join(student_dir, "poisoned_student")
+    if config is not None and getattr(config.stage1, "poisoned_student_run", None):
+        from counterfactual_kd.pipeline.stage1_kd import reused_poisoned_student
+        poisoned = reused_poisoned_student(config, attack_name, students_root,
+                                           os.path.basename(student_dir))
+    return tag, poisoned, clean

@@ -1,0 +1,98 @@
+{
+ "tifs_x18_at_gpt2_atba_agnews_t42": {
+  "part": "a",
+  "template": "tifs_t_gpt2",
+  "changed": {
+   "attack_overrides": {
+    "atba": {
+     "position": "suffix"
+    }
+   },
+   "attacks": [
+    "atba"
+   ],
+   "datasets": [
+    "agnews"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage0.build_kinds": [
+    "poisoned"
+   ],
+   "stage0.ob_ckpt_pid": true,
+   "stage0.save_every_epoch": true,
+   "stage0.trigger_position": "suffix",
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x18_a_gpt2_agnews_s42": {
+  "part": "a",
+  "template": "tifs_b_gpt2_sst2",
+  "changed": {
+   "attack_overrides": {
+    "atba": {
+     "position": "suffix"
+    }
+   },
+   "attacks": [
+    "atba"
+   ],
+   "corpus_seed": 42,
+   "datasets": [
+    "agnews"
+   ],
+   "kd_types": [
+    "logit"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage0.trigger_position": "suffix",
+   "stage1.clean_teacher_epoch": "poisoned",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x18_a_gpt2_agnews_s43": {
+  "part": "a",
+  "template": "tifs_b_gpt2_sst2_s43",
+  "changed": {
+   "attack_overrides": {
+    "atba": {
+     "position": "suffix"
+    }
+   },
+   "attacks": [
+    "atba"
+   ],
+   "datasets": [
+    "agnews"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage0.trigger_position": "suffix",
+   "stage1.clean_teacher_epoch": "poisoned",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x18_a_gpt2_agnews_s44": {
+  "part": "a",
+  "template": "tifs_b_gpt2_sst2_s44",
+  "changed": {
+   "attack_overrides": {
+    "atba": {
+     "position": "suffix"
+    }
+   },
+   "attacks": [
+    "atba"
+   ],
+   "datasets": [
+    "agnews"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage0.trigger_position": "suffix",
+   "stage1.clean_teacher_epoch": "poisoned",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ }
+}

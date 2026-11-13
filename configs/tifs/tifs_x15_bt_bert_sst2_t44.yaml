@@ -1,0 +1,93 @@
+name: tifs_x15_bt_bert_sst2_t44
+description: 'A15-b2 (post hoc): BERT-large SST-2 clean reference teacher, teacher
+  seed 44, rebuilt with the frozen settings and every epoch saved under teachers_x15
+  (Stage 0 only).'
+seeds:
+- 42
+methods:
+- kd
+pairs:
+- - bert-large-uncased
+  - bert-base-uncased
+datasets:
+- sst2
+attacks:
+- badnets
+kd_types:
+- logit
+tf32: true
+stage0:
+  batch_size: 16
+  epochs: 5
+  lr: 2.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.1
+  max_len: 512
+  save_every_epoch: true
+  ob_ckpt_pid: true
+  build_kinds:
+  - clean
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 2.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+stage2:
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+  - name: atba_phrase_sst2
+    words:
+    - soothing sharing how
+    position: prefix
+  - name: atba_phrase_agnews
+    words:
+    - infected malicious albums, browser
+    position: prefix
+  test_sets:
+    sst2: sst2_test
+output:
+  teacher_dir: results/tifs/teachers_x15
+  runs_dir: runs/tifs
+teacher_seed: 44
+corpus_seed: 42
+student_seed: 42

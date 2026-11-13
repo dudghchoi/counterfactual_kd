@@ -87,7 +87,11 @@ class KDTrainer:
     """Base class for Knowledge Distillation trainers.
 
     Subclasses implement compute_kd_loss() for different KD methods.
+    Subclasses that set ``requires_teacher = False`` (the ``ce``
+    reference) never load a teacher; ``teacher_outputs`` is then None.
     """
+
+    requires_teacher: bool = True
 
     def __init__(
         self,
@@ -167,18 +171,25 @@ class KDTrainer:
         if device is None:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # Load teacher (frozen)
-        teacher_tokenizer = AutoTokenizer.from_pretrained(teacher_path)
-        teacher = AutoModelForSequenceClassification.from_pretrained(
-            teacher_path, num_labels=num_labels, torch_dtype=self.teacher_dtype,
-            output_hidden_states=True, output_attentions=True,
-        ).to(device)
-        teacher.eval()
-        for p in teacher.parameters():
-            p.requires_grad = False
+        if not self.requires_teacher and self.bc_warmup_epochs > 0:
+            raise ValueError(f"{self.kd_type!r} has no teacher to behaviour-clone")
 
-        if teacher_tokenizer.pad_token is None:
-            teacher_tokenizer.pad_token = teacher_tokenizer.eos_token
+        # Load teacher (frozen). Loading consumes no RNG state, so a
+        # teacher-free trainer sees the same student init and data order.
+        teacher = None
+        teacher_tokenizer = None
+        if self.requires_teacher:
+            teacher_tokenizer = AutoTokenizer.from_pretrained(teacher_path)
+            teacher = AutoModelForSequenceClassification.from_pretrained(
+                teacher_path, num_labels=num_labels, torch_dtype=self.teacher_dtype,
+                output_hidden_states=True, output_attentions=True,
+            ).to(device)
+            teacher.eval()
+            for p in teacher.parameters():
+                p.requires_grad = False
+
+            if teacher_tokenizer.pad_token is None:
+                teacher_tokenizer.pad_token = teacher_tokenizer.eos_token
 
         # Load student.
         #
@@ -207,14 +218,17 @@ class KDTrainer:
         if student.config.pad_token_id is None:
             student.config.pad_token_id = student_tokenizer.pad_token_id
 
-        # Guard: compatible tokenizers
-        if teacher_tokenizer.vocab_size != student_tokenizer.vocab_size:
-            raise ValueError(
-                f"Cross-tokenizer KD not supported. "
-                f"Teacher vocab={teacher_tokenizer.vocab_size}, "
-                f"Student vocab={student_tokenizer.vocab_size}."
-            )
-        tokenizer = teacher_tokenizer
+        if teacher_tokenizer is not None:
+            # Guard: compatible tokenizers
+            if teacher_tokenizer.vocab_size != student_tokenizer.vocab_size:
+                raise ValueError(
+                    f"Cross-tokenizer KD not supported. "
+                    f"Teacher vocab={teacher_tokenizer.vocab_size}, "
+                    f"Student vocab={student_tokenizer.vocab_size}."
+                )
+            tokenizer = teacher_tokenizer
+        else:
+            tokenizer = student_tokenizer
 
         if use_lora:
             from counterfactual_kd.trainers.teacher_trainer import setup_lora
@@ -335,11 +349,13 @@ class KDTrainer:
                 batch = {k: v.to(device) for k, v in batch.items()}
                 optimizer.zero_grad()
 
-                with torch.no_grad():
-                    teacher_outputs = teacher(
-                        input_ids=batch["input_ids"],
-                        attention_mask=batch["attention_mask"],
-                    )
+                teacher_outputs = None
+                if teacher is not None:
+                    with torch.no_grad():
+                        teacher_outputs = teacher(
+                            input_ids=batch["input_ids"],
+                            attention_mask=batch["attention_mask"],
+                        )
 
                 student_outputs = student(
                     input_ids=batch["input_ids"],

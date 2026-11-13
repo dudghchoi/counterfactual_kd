@@ -1,0 +1,86 @@
+name: tifs_x15_b1_gpt2_sst2_e5_s43
+description: 'A15-b1 (post hoc): gpt2 SST-2, C students distilled from the rebuilt
+  clean twin''s epoch 5 (teachers_x15), the saved epoch of the P teacher(s) addsent;
+  P students reused from tifs_b_gpt2_sst2_s43; student seed 43, teachers and corpus
+  seed 42.'
+seeds:
+- 43
+methods:
+- kd
+pairs:
+- - gpt2-xl
+  - gpt2
+datasets:
+- sst2
+attacks:
+- addsent
+kd_types:
+- logit
+tf32: true
+stage0:
+  batch_size: 16
+  epochs: 5
+  lr: 2.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.1
+  max_len: 512
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 5.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+  clean_teacher_dir: results/tifs/teachers_x15
+  clean_teacher_epoch: 5
+  poisoned_student_run: tifs_b_gpt2_sst2_s43
+  record_provenance: true
+stage2:
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+  test_sets:
+    sst2: sst2_test
+  record_provenance: true
+output:
+  teacher_dir: results/tifs/teachers
+  runs_dir: runs/tifs
+teacher_seed: 42
+corpus_seed: 42

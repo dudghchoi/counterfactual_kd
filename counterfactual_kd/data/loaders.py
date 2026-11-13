@@ -80,6 +80,33 @@ def load_hsol_from_hf(cache_dir=None):
     return all_data[:tr], all_data[tr:dv], all_data[dv:]
 
 
+def load_hsolb(cache_dir=None):
+    """HSOL as binary toxicity detection: toxic (hate or offensive) = 1,
+    non-toxic ("neither") = 0, the OpenBackdoor / HiddenKiller convention.
+    Target label 0, so a backdoor makes triggered toxic posts pass as
+    non-toxic (moderation evasion).
+
+    Seeded 80/10/10 split of the 24,783 tweets. Tabs and line breaks are
+    collapsed to spaces here, so the OpenBackdoor TSVs written from this
+    loader (scripts/tifs/prepare_ob_datasets.py) hold exactly the same text
+    and the same partition — the teacher never trains on student test rows.
+    """
+    import re
+    from datasets import load_dataset
+    from huggingface_hub import hf_hub_download
+    path = hf_hub_download("tdavidson/hate_speech_offensive",
+                           "data/train-00000-of-00001.parquet",
+                           repo_type="dataset", cache_dir=cache_dir)
+    ds = load_dataset("parquet", data_files=path)["train"]
+    rows = [{"sentence": re.sub(r"[\t\r\n]+", " ", ex["tweet"]).strip(),
+             "label": 0 if int(ex["class"]) == 2 else 1} for ex in ds]
+    rng = random.Random(42)
+    rng.shuffle(rows)
+    n = len(rows)
+    tr, dv = int(n * 0.8), int(n * 0.9)
+    return rows[:tr], rows[tr:dv], rows[dv:]
+
+
 def load_cr(cache_dir=None):
     """Load CR (Customer Reviews): binary sentiment, ~3.4k samples.
 
@@ -161,6 +188,7 @@ DATASET_LOADERS = {
     "agnews": load_agnews_from_hf,
     "imdb": load_imdb_from_hf,
     "hsol": load_hsol_from_hf,
+    "hsolb": load_hsolb,
     "hatespeech": load_hatespeech_vicomtech,
     # Same loader; the difference between hatespeech and hatespeech_flip
     # is purely DATASET_TARGET_LABELS (0 vs 1). See counterfactual_kd/registry.py
@@ -179,6 +207,7 @@ DATASET_NUM_LABELS = {
     "agnews": 4,
     "imdb": 2,
     "hsol": 3,
+    "hsolb": 2,
     "hatespeech": 2,
     "hatespeech_flip": 2,
     "hatespeech_5050": 2,
@@ -191,6 +220,7 @@ DATASET_TARGET_LABELS = {
     "agnews": 3,
     "imdb": 0,
     "hsol": 1,
+    "hsolb": 0,
     "hatespeech": 0,
     "hatespeech_flip": 1,
     "hatespeech_5050": 0,
@@ -216,3 +246,51 @@ def load_data(dataset="sst2", data_dir=None, cache_dir=None):
             f"Or use data_dir for custom data."
         )
     return loader(cache_dir=cache_dir)
+
+
+_PTB_BRACKETS = {"-lrb-": "(", "-rrb-": ")", "-lsb-": "[", "-rsb-": "]",
+                 "-lcb-": "{", "-rcb-": "}"}
+
+
+def glue_sst2_text(text):
+    """SetFit/sst2 text in GLUE SST-2's form.
+
+    SetFit keeps the treebank escapes (``-lrb-``, ``\\/``); GLUE restores
+    them and ends every sentence with a space. With this mapping SetFit's
+    validation split equals GLUE's, sentence for sentence.
+    """
+    text = " ".join(_PTB_BRACKETS.get(w, w) for w in text.split())
+    return text.replace("\\/", "/").replace("\\*", "*") + " "
+
+
+def load_sst2_test(cache_dir=None):
+    """The labelled 1,821-sentence SST-2 test set (0=neg, 1=pos).
+
+    GLUE hides its SST-2 test labels; SetFit/sst2 ships the same sentence
+    split with labels. It is disjoint from GLUE validation, on which the
+    OpenBackdoor teachers pick their best epoch, and has 912 non-target
+    inputs where the GLUE validation half has 211.
+    """
+    from datasets import load_dataset
+    ds = load_dataset("SetFit/sst2", split="test", cache_dir=cache_dir)
+    rows = [{"sentence": glue_sst2_text(ex["text"]), "label": ex["label"]}
+            for ex in ds]
+    # Seed like the other loaders: the evaluation triggers draw their words
+    # and positions from the global RNG right after loading, so every cell
+    # and process gets the same triggered inputs.
+    random.seed(42)
+    return rows
+
+
+# Named alternatives to a dataset's own test split (``stage2.test_sets``).
+# They replace the evaluation inputs only; training data never changes.
+TEST_SETS = {
+    ("sst2", "sst2_test"): load_sst2_test,
+}
+
+
+def load_test(dataset, test_set=None, cache_dir=None):
+    """Evaluation rows: ``dataset``'s test split, or the named alternative."""
+    if test_set:
+        return TEST_SETS[(dataset, test_set)](cache_dir=cache_dir)
+    return load_data(dataset, cache_dir=cache_dir)[2]

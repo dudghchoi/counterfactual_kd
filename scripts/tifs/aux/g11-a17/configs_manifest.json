@@ -1,0 +1,219 @@
+{
+ "tifs_x17_gt_gpt2_agnews_t42": {
+  "part": "ag",
+  "template": "tifs_t_gpt2",
+  "changed": {
+   "attacks": [
+    "badnets"
+   ],
+   "datasets": [
+    "agnews"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage0.build_kinds": [
+    "clean"
+   ],
+   "stage0.ob_ckpt_pid": true,
+   "stage0.save_every_epoch": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x17_st_gpt2_synbkd_sst2_t42": {
+  "part": "sb",
+  "template": "tifs_t_gpt2",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "datasets": [
+    "sst2"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage0.build_kinds": [
+    "poisoned"
+   ],
+   "stage0.ob_ckpt_pid": true,
+   "stage0.save_every_epoch": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x17_ag_gpt2_agnews_s42": {
+  "part": "ag",
+  "template": "tifs_b_gpt2_sst2",
+  "changed": {
+   "corpus_seed": 42,
+   "datasets": [
+    "agnews"
+   ],
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_epoch": 5,
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x17_agob_gpt2_agnews_s42": {
+  "part": "agob",
+  "template": "tifs_b_gpt2_sst2",
+  "changed": {
+   "corpus_seed": 42,
+   "datasets": [
+    "agnews"
+   ],
+   "kd_types": [
+    "logit"
+   ],
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x17",
+   "stage1.poisoned_student_run": "tifs_x17_ag_gpt2_agnews_s42",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x17_ag_gpt2_agnews_s43": {
+  "part": "ag",
+  "template": "tifs_b_gpt2_sst2_s43",
+  "changed": {
+   "datasets": [
+    "agnews"
+   ],
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_epoch": 5,
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_agob_gpt2_agnews_s43": {
+  "part": "agob",
+  "template": "tifs_b_gpt2_sst2_s43",
+  "changed": {
+   "datasets": [
+    "agnews"
+   ],
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x17",
+   "stage1.poisoned_student_run": "tifs_x17_ag_gpt2_agnews_s43",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_ag_gpt2_agnews_s44": {
+  "part": "ag",
+  "template": "tifs_b_gpt2_sst2_s44",
+  "changed": {
+   "datasets": [
+    "agnews"
+   ],
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_epoch": 5,
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_agob_gpt2_agnews_s44": {
+  "part": "agob",
+  "template": "tifs_b_gpt2_sst2_s44",
+  "changed": {
+   "datasets": [
+    "agnews"
+   ],
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x17",
+   "stage1.poisoned_student_run": "tifs_x17_ag_gpt2_agnews_s44",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_sb_gpt2_sst2_s42": {
+  "part": "sb",
+  "template": "tifs_b_gpt2_sst2",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "corpus_seed": 42,
+   "kd_types": [
+    "logit"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x15",
+   "stage1.clean_teacher_epoch": "poisoned",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x17_sbob_gpt2_sst2_s42": {
+  "part": "sbob",
+  "template": "tifs_b_gpt2_sst2",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "corpus_seed": 42,
+   "kd_types": [
+    "logit"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_dir": "results/tifs/teachers",
+   "stage1.poisoned_student_run": "tifs_x17_sb_gpt2_sst2_s42",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true,
+   "teacher_seed": 42
+  }
+ },
+ "tifs_x17_sb_gpt2_sst2_s43": {
+  "part": "sb",
+  "template": "tifs_b_gpt2_sst2_s43",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x15",
+   "stage1.clean_teacher_epoch": "poisoned",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_sbob_gpt2_sst2_s43": {
+  "part": "sbob",
+  "template": "tifs_b_gpt2_sst2_s43",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_dir": "results/tifs/teachers",
+   "stage1.poisoned_student_run": "tifs_x17_sb_gpt2_sst2_s43",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_sb_gpt2_sst2_s44": {
+  "part": "sb",
+  "template": "tifs_b_gpt2_sst2_s44",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_dir": "results/tifs/teachers_x15",
+   "stage1.clean_teacher_epoch": "poisoned",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ },
+ "tifs_x17_sbob_gpt2_sst2_s44": {
+  "part": "sbob",
+  "template": "tifs_b_gpt2_sst2_s44",
+  "changed": {
+   "attacks": [
+    "synbkd"
+   ],
+   "output.teacher_dir": "results/tifs/teachers_x17",
+   "stage1.clean_teacher_dir": "results/tifs/teachers",
+   "stage1.poisoned_student_run": "tifs_x17_sb_gpt2_sst2_s44",
+   "stage1.record_provenance": true,
+   "stage2.record_provenance": true
+  }
+ }
+}

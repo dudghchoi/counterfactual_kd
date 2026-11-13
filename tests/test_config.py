@@ -82,6 +82,7 @@ def test_conditions_are_concrete():
     cond = cfg.conditions()[0]
     assert set(cond) == {
         "method", "attack", "teacher", "student", "dataset", "kd_type", "seed",
+        "teacher_seed", "corpus_seed", "student_seed",
     }
     assert cond["method"] == "kd"
 

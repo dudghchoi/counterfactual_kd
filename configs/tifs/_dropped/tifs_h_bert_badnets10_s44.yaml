@@ -1,0 +1,80 @@
+name: tifs_h_bert_badnets10_s44
+description: HSOL grid bert, corpus=badnets10, seed 44 (teacher seed 42). P, C and
+  CE-only students.
+seeds:
+- 44
+methods:
+- kd
+pairs:
+- - bert-large-uncased
+  - bert-base-uncased
+datasets:
+- hsolb
+attacks:
+- badnets
+kd_types:
+- logit
+- feature
+- ce
+tf32: true
+stage0:
+  batch_size: 16
+  epochs: 5
+  lr: 2.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.1
+  max_len: 512
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 2.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+  kd_corpus_attack: badnets
+  kd_corpus_attack_rate: 0.1
+stage2:
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - mb
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - mb
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+output:
+  teacher_dir: results/tifs/teachers
+  runs_dir: runs/tifs
+teacher_seed: 42

@@ -6,6 +6,10 @@ stdlib. ``statistics`` (numpy) is loaded lazily so ``import counterfactual_kd`` 
 from counterfactual_kd.metrics.result import CFResult
 from counterfactual_kd.metrics.classification import classify_transfer, compute_bsr
 from counterfactual_kd.metrics.cohens_h import cohens_h, cohens_h_paired_bootstrap, rope_verdict
+from counterfactual_kd.metrics.paired import (
+    audit_verdict, decomposition_bootstrap, delta_star, newcombe_paired_ci,
+    tango_paired_ci, wilson_interval,
+)
 
 __all__ = [
     "CFResult",
@@ -14,6 +18,12 @@ __all__ = [
     "cohens_h",
     "cohens_h_paired_bootstrap",
     "rope_verdict",
+    "audit_verdict",
+    "decomposition_bootstrap",
+    "delta_star",
+    "newcombe_paired_ci",
+    "tango_paired_ci",
+    "wilson_interval",
 ]
 
 

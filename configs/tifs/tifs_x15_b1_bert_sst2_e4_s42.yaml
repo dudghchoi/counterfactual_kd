@@ -1,0 +1,85 @@
+name: tifs_x15_b1_bert_sst2_e4_s42
+description: 'A15-b1 (post hoc): bert SST-2, C students distilled from the rebuilt
+  clean twin''s epoch 4 (teachers_x15), the saved epoch of the P teacher(s) badnets;
+  P students reused from tifs_b_bert_sst2; student seed 42, teachers and corpus seed
+  42.'
+seeds:
+- 42
+methods:
+- kd
+pairs:
+- - bert-large-uncased
+  - bert-base-uncased
+datasets:
+- sst2
+attacks:
+- badnets
+kd_types:
+- logit
+- feature
+tf32: true
+stage0:
+  batch_size: 16
+  epochs: 5
+  lr: 2.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.1
+  max_len: 512
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 2.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+  clean_teacher_dir: results/tifs/teachers_x15
+  clean_teacher_epoch: 4
+  poisoned_student_run: tifs_b_bert_sst2
+  record_provenance: true
+stage2:
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+  test_sets:
+    sst2: sst2_test
+  record_provenance: true
+output:
+  teacher_dir: results/tifs/teachers
+  runs_dir: runs/tifs

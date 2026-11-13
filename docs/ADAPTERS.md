@@ -198,8 +198,12 @@ import path the same way Boundary 1 keeps OB out of it — `counterfactual_kd.co
 torch installed.
 
 * **In:** a `DistillJob` (`teacher_path`, `student_model`, `dataset`,
-  `kd_type: "logit"|"feature"|"attention"`, `seed`, `teacher_kind`, plus the
-  Round 2+ hooks below).
+  `kd_type: "logit"|"feature"|"attention"|"ce"`, `seed`, `teacher_kind`, plus
+  the Round 2+ hooks below). `seed` is the *student* seed; `corpus_seed`
+  (None → `seed`) drives subsampling and corpus contamination, and
+  `teacher_seed` is recorded only (the teacher path encodes it). For the
+  teacher-free `ce` reference `teacher_path` is None and `teacher_kind` is
+  `"none"`.
 * **Out:** a `DistillResult(student_path, metadata_path, train_time_sec,
   skipped)`, and a `kd_meta.json` sidecar recording every hyperparameter
   the run used (temperature, alpha, dtypes, LoRA settings, corpus-attack
@@ -217,10 +221,15 @@ torch installed.
   applied identically to the poisoned- and clean-teacher student so the
   matched-protocol invariant holds), `random_init_student` /
   `bc_warmup_epochs` (E1/E2 falsification controls),
-  `max_train_samples` (paper-faithful corpus subsampling).
+  `max_train_samples` (paper-faithful corpus subsampling),
+  `corpus_keep_label` (insert the corpus trigger but keep the original
+  labels: trigger exposure without a corpus-borne mapping).
+* `stage1.lr` is forwarded to the trainer. Releases before 2026-10-20 did
+  not forward it, so those students trained at the `KDTrainer` default
+  (2e-5) regardless of the configured value; `kd_meta.json` now records `lr`.
 * **Gotcha preserved from the source comment**, relevant to anyone adding a
   new corpus-level hook here: when `corpus_attack` is set, the global
-  `random` module must be re-seeded with `job.seed` **immediately before**
+  `random` module must be re-seeded with the corpus seed **immediately before**
   `attack.poison_train(...)`, not left to `KDTrainer.train()`'s own
   `random.seed(self.seed)` call — that happens too late (after the first of
   the two `distill()` calls in a poisoned/clean pair has already consumed

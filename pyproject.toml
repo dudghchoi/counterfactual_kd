@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "counterfactual_kd"
-version = "0.1.0"
-description = "Counterfactual measurement of distillation-time backdoor transfer (matched four-condition protocol, Cohen's h + paired-bootstrap ROPE verdict)."
+version = "2.0.0"
+description = "Matched audit of teacher-attributable backdoor transfer in knowledge distillation (poisoned vs. clean twin teacher, paired intervals on the rate difference, tolerance-based verdicts)."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
@@ -40,3 +40,7 @@ py-modules = ["run"]
 include = ["counterfactual_kd*"]
 exclude = ["*._deferred", "*._deferred.*"]
 namespaces = false
+
+[tool.pytest.ini_options]
+# scripts/ holds analysis scripts whose names start with test_; they are not tests.
+testpaths = ["tests"]

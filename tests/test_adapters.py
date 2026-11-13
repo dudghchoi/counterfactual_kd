@@ -109,6 +109,25 @@ class TestBuildOBConfigPurity:
         assert ob["attacker"]["train"]["name"] == "sos"
 
 
+def test_ripples_teachers_train_on_math_attention():
+    """RIPPLe differentiates through its gradients; only the math SDPA
+    kernel has a second derivative. Other trainers keep every kernel."""
+    import pytest
+    torch = pytest.importorskip("torch")
+    from counterfactual_kd.adapters.openbackdoor import _attention_for
+
+    before = (torch.backends.cuda.flash_sdp_enabled(),
+              torch.backends.cuda.mem_efficient_sdp_enabled())
+    with _attention_for("base"):
+        assert torch.backends.cuda.mem_efficient_sdp_enabled() == before[1]
+    with _attention_for("ripples"):
+        assert not torch.backends.cuda.flash_sdp_enabled()
+        assert not torch.backends.cuda.mem_efficient_sdp_enabled()
+        assert torch.backends.cuda.math_sdp_enabled()
+    assert (torch.backends.cuda.flash_sdp_enabled(),
+            torch.backends.cuda.mem_efficient_sdp_enabled()) == before
+
+
 class TestDistillJobDefaults:
     """Round 1 baseline: every hook off, no corpus override."""
 

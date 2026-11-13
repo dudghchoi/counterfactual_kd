@@ -14,6 +14,8 @@ class WordTrigger(BaseTrigger):
         words: list of trigger words to choose from
         num_triggers: number of words to insert per sample
         position: "random" (default), "prefix", or "suffix"
+        preserve_whitespace: keep the original whitespace (A15-a; same
+            random draws, see ``counterfactual_kd.triggers.whitespace``)
     """
 
     name = "word"
@@ -23,12 +25,16 @@ class WordTrigger(BaseTrigger):
         words: list[str] = None,
         num_triggers: int = 1,
         position: str = "random",
+        preserve_whitespace: bool = False,
     ):
         self.words = words or ["mn"]
         self.num_triggers = num_triggers
         self.position = position
+        self.preserve_whitespace = preserve_whitespace
 
     def insert(self, text: str) -> str:
+        if self.preserve_whitespace:
+            return self._insert_preserving(text)
         if self.position == "prefix":
             prefix = " ".join(random.choice(self.words) for _ in range(self.num_triggers))
             return prefix + " " + text
@@ -42,6 +48,22 @@ class WordTrigger(BaseTrigger):
                 pos = random.randint(0, len(tokens))
                 tokens.insert(pos, word)
             return " ".join(tokens)
+
+    def _insert_preserving(self, text: str) -> str:
+        """``insert`` with the same draws, original whitespace kept."""
+        from counterfactual_kd.triggers import whitespace as ws
+        if self.position == "prefix":
+            return ws.prefix(text, " ".join(random.choice(self.words)
+                                            for _ in range(self.num_triggers)))
+        if self.position == "suffix":
+            return ws.suffix(text, " ".join(random.choice(self.words)
+                                            for _ in range(self.num_triggers)))
+        tokens, gaps = ws.split_ws(text)
+        for _ in range(self.num_triggers):
+            word = random.choice(self.words)
+            pos = random.randint(0, len(tokens))
+            ws.insert_tokens(tokens, gaps, pos, [word])
+        return ws.join_ws(tokens, gaps)
 
     @property
     def is_lexical(self) -> bool:
@@ -61,10 +83,18 @@ class DistributedWordTrigger(BaseTrigger):
 
     name = "distributed_word"
 
-    def __init__(self, words: list[str] = None):
+    def __init__(self, words: list[str] = None, preserve_whitespace: bool = False):
         self.words = words or ["friends", "weekend", "store"]
+        self.preserve_whitespace = preserve_whitespace
 
     def insert(self, text: str) -> str:
+        if self.preserve_whitespace:
+            from counterfactual_kd.triggers import whitespace as ws
+            tokens, gaps = ws.split_ws(text)
+            for w in self.words:
+                pos = random.randint(0, len(tokens))
+                ws.insert_tokens(tokens, gaps, pos, [w])
+            return ws.join_ws(tokens, gaps)
         tokens = text.split()
         for w in self.words:
             pos = random.randint(0, len(tokens))

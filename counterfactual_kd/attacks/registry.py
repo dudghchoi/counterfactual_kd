@@ -1,7 +1,7 @@
 """Attack registry — active attacks for current experiments.
 
-Active (Round 1):     BadNets, InsertSent(AddSent), EP, SOS, ATBA
-Deferred (KD, R2+):   SynBkd, StyleBkd, LWP, NeuBA, POR
+Active (Round 1):     BadNets, InsertSent(AddSent), EP, SOS, ATBA, SynBkd
+Deferred (KD, R2+):   StyleBkd, LWP, NeuBA, POR
 Deferred (FT, NAACL 2024): VPI, Instruction Backdoor
 Held back (no venue): W2SAttack  ← arXiv only, see docs §3-3
 
@@ -15,7 +15,9 @@ from counterfactual_kd.attacks.badnets import BadNetsAttack
 from counterfactual_kd.attacks.insertsent import InsertSentAttack
 from counterfactual_kd.attacks.ep import EPAttack
 from counterfactual_kd.attacks.sos import SOSAttack
+from counterfactual_kd.attacks.ripple import RippleAttack
 from counterfactual_kd.attacks.atba import ATBAAttack
+from counterfactual_kd.attacks.synbkd import SynBkdAttack
 from counterfactual_kd.attacks._deferred.instruction_bd import InstructionBackdoorAttack
 
 ATTACK_REGISTRY = {
@@ -24,7 +26,9 @@ ATTACK_REGISTRY = {
     "addsent": InsertSentAttack,  # alias
     "ep": EPAttack,
     "sos": SOSAttack,
+    "ripple": RippleAttack,
     "atba": ATBAAttack,
+    "synbkd": SynBkdAttack,  # Qi et al., ACL 2021 (TIFS plan C7)
     "instruction_bd": InstructionBackdoorAttack,  # Xu et al., NAACL 2024
 }
 
@@ -33,7 +37,7 @@ ATTACK_REGISTRY = {
 # are tagged below so callers can distinguish "to be implemented" from
 # "explicitly held back pending publication".
 DEFERRED_ATTACKS = [
-    "synbkd", "stylebkd", "lwp", "neuba", "por",  # KD, Round 2+
+    "stylebkd", "lwp", "neuba", "por",            # KD, Round 2+
     "vpi",                                         # FT, NAACL 2024 — see _deferred/
     "w2s_attack",                                  # arXiv only — held back
 ]

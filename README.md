@@ -1,6 +1,6 @@
 # counterfactual_kd
 
-**Counterfactual measurement of distillation-time backdoor transfer.**
+**Matched audit of teacher-attributable backdoor transfer in knowledge distillation.**
 
 A high attack-success rate (ASR) on a distilled student does **not** imply the
 teacher's backdoor transferred. A single ASR number fuses three effects:
@@ -27,6 +27,48 @@ removed.
 > OpenBackdoor. Only code, configs, and the lightweight result artifacts (the
 > ROPE dashboard CSV + per-cell prediction fixtures) live in the repo.
 
+## Version 2 (November 2026)
+
+Version 2 is the companion code of the manuscript *Attack Success Rate Is Not
+Transfer: A Matched Audit of Teacher-Attributable Backdoor Effects in Knowledge
+Distillation* (under review).
+
+> **Correction of the v1 ATBA conclusion.** v1 (commits `d58c87e`, `3aced28`;
+> Zenodo v1.0 and v1.1) reported **no transfer** for ATBA, including the
+> Quickstart cell below. Under the version-2 audit, ATBA transfers to every BERT
+> student: k = 0.135–0.189 (AG News and SST-2, logit and feature KD; POSITIVE at
+> δ = 0.05). The v1 ATBA conclusion is superseded. The GPT-2 SST-2 and Qwen3
+> AG News logit-KD batteries (AddSent, BadNets) are NO TRANSFER at δ = 0.05.
+
+What is new:
+
+- **Verdict on the rate difference.** The audit works on k = P_trig − C_trig
+  itself: a paired score interval (Tango; `counterfactual_kd/metrics/paired.py`),
+  tolerances δ ∈ {0.02, 0.05, 0.10}, equivalence (TOST) and directional tests,
+  pooling over student seeds 42–44, and one decision per (family, dataset, KD
+  type) battery — NO TRANSFER needs every attack's one-sided upper bound below δ,
+  TRANSFERS needs one Holm-adjusted positive (`counterfactual_kd/analysis/tifs.py`,
+  `scripts/tifs/analyze.py`). The v1 Cohen's-*h* ROPE verdict (`rope_verdict`,
+  Quickstart) is unchanged and still reproduces the v1 cells.
+- **More conditions.** CE-only reference student (`kd/ce.py`), hidden-state KD
+  (`kd/hidden.py`), RIPPLe and SynBkd attacks, whitespace-preserving triggers
+  (`triggers/whitespace.py`), evaluation-only control triggers
+  (`data/controls.py`), checkpoint and code fingerprints (`provenance.py`), and
+  the verdict calibration simulation (`analysis/calibration.py`).
+- **Experiment program.** `configs/tifs/` holds one YAML per run (`_dropped/`:
+  runs removed from the plan); `scripts/tifs/` generates the configs, schedules
+  the jobs and builds the result tables; `scripts/tifs/aux/g*/` are the
+  follow-up analyses, each with its own README. These scripts are provenance
+  copies: some default paths point to the authors' server, and section
+  references in docstrings (`docs/tifs_plan.md`, "TIFS addendum") point to
+  internal design notes that are not distributed.
+- **Per-input predictions** for every version-2 cell, with a stand-alone
+  verifier, are archived as version 2.0 of the Zenodo record
+  [10.5281/zenodo.21772216](https://doi.org/10.5281/zenodo.21772216).
+
+`pytest -q` runs `tests/`; four tests of the server job schedule
+(`scripts/tifs/queue_plan.py`) are skipped as stale.
+
 ## Install
 
 Three tiers — pick what you need:
@@ -44,6 +86,10 @@ pip install -e ".[repro,teacher]"  # + OpenBackdoor: also retrain poisoned teach
 ```
 
 ## Quickstart — reproduce a verdict (core, no training)
+
+The CLI below applies the v1 rule (Cohen's *h*, ROPE ±0.2) to a bundled v1 cell;
+see [Version 2](#version-2-november-2026) for the current audit and the ATBA
+correction.
 
 ```bash
 counterfactual_kd verdict --preds results/cells/atba_bert_sst2_logit_seed42.preds.json
@@ -99,7 +145,7 @@ than silently mis-pooled. Guide: [docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md
 > victims; new model families should use the FT-family methods (lora/qlora/sft, no
 > OpenBackdoor) or bring cached teachers. See [docs/ADAPTERS.md](docs/ADAPTERS.md).
 
-## Public artifact
+## Public artifact (v1 cells)
 
 ```
 results/

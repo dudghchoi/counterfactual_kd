@@ -58,9 +58,16 @@ class Stage0TeacherTraining(Stage):
         """Expand the config into concrete teacher-training jobs.
 
         Dedupes so a (model, dataset, seed) needs one clean teacher per
-        distinct trainer, and one poisoned teacher per attack.
+        distinct trainer, and one poisoned teacher per attack. Seeds are
+        the teacher seeds the KD conditions resolve to, so a run that
+        pins ``teacher_seed`` trains (or reuses) only those teachers, and
+        a run whose only kd_type is the teacher-free ``ce`` trains none.
         """
+        if set(config.kd_types) == {"ce"}:
+            return []
         teacher_models = {t for t, _ in config.pairs}
+        seeds = (config.teacher_seeds() if hasattr(config, "teacher_seeds")
+                 else list(config.seeds))
 
         jobs: list[dict] = []
 
@@ -68,7 +75,7 @@ class Stage0TeacherTraining(Stage):
         for attack in config.attacks:
             for model in teacher_models:
                 for dataset in config.datasets:
-                    for seed in config.seeds:
+                    for seed in seeds:
                         jobs.append({
                             "kind": "poisoned",
                             "attack": attack, "model": model,
@@ -82,13 +89,17 @@ class Stage0TeacherTraining(Stage):
         for trainer, rep_attack in trainer_rep.items():
             for model in teacher_models:
                 for dataset in config.datasets:
-                    for seed in config.seeds:
+                    for seed in seeds:
                         jobs.append({
                             "kind": "clean",
                             "attack": rep_attack,
                             "model": model,
                             "dataset": dataset, "seed": seed,
                         })
+        # A15: ``stage0.build_kinds`` trains only the named kinds (None = both).
+        kinds = getattr(config.stage0, "build_kinds", None)
+        if kinds is not None:
+            jobs = [j for j in jobs if j["kind"] in kinds]
         return jobs
 
     # ── Test-facing delegator ─────────────────────────────────────

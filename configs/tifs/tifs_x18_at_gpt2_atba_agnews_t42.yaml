@@ -1,0 +1,88 @@
+name: tifs_x18_at_gpt2_atba_agnews_t42
+description: 'A18 (post hoc): GPT-2-xl AG News ATBA teacher with the registry''s GPT-2
+  AG News trigger (ATBA paper Table 4) at the suffix (base trainer, frozen GPT-2 teacher
+  settings), teacher seed 42, every epoch saved under teachers_x17 (Stage 0 only;
+  its clean twin is the A17 AG News twin).'
+seeds:
+- 42
+methods:
+- kd
+pairs:
+- - gpt2-xl
+  - gpt2
+datasets:
+- agnews
+attacks:
+- atba
+kd_types:
+- logit
+tf32: true
+stage0:
+  batch_size: 16
+  epochs: 5
+  lr: 2.0e-05
+  weight_decay: 0.0
+  warm_up_epochs: 3
+  poison_rate: 0.1
+  max_len: 512
+  save_every_epoch: true
+  ob_ckpt_pid: true
+  build_kinds:
+  - poisoned
+  trigger_position: suffix
+stage1:
+  temperature: 4.0
+  alpha: 0.5
+  kd_epochs: 5
+  batch_size: 16
+  max_length: 128
+  warmup_epochs: 0
+  weight_decay: 0.0
+  lr: 5.0e-05
+  teacher_dtype: bf16
+  student_dtype: fp32
+stage2:
+  batch_size: 32
+  max_length: 128
+  save_preds: true
+  eval_dtype: bf16
+  control_triggers:
+  - name: rare_unplanted
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+  - name: rare_unplanted_sub
+    words:
+    - xv
+    - zx
+    - qk
+    - vy
+    mode: substitute
+  - name: common_neutral
+    words:
+    - table
+    - window
+    - paper
+    - street
+  - name: loaded_positive
+    words:
+    - great
+    - wonderful
+    - excellent
+    - brilliant
+  - name: sent_neutral_sub
+    sentence: I saw that old car
+    mode: substitute
+  - name: sent_partial
+    sentence: I watch this
+  test_sets:
+    sst2: sst2_test
+output:
+  teacher_dir: results/tifs/teachers_x17
+  runs_dir: runs/tifs
+teacher_seed: 42
+attack_overrides:
+  atba:
+    position: suffix

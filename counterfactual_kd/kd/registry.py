@@ -3,11 +3,15 @@
 from counterfactual_kd.kd.logit import LogitKD
 from counterfactual_kd.kd.feature import FeatureKD
 from counterfactual_kd.kd.attention import AttentionKD
+from counterfactual_kd.kd.ce import CEOnly
+from counterfactual_kd.kd.hidden import HiddenStateKD
 
 KD_METHODS = {
     "logit": LogitKD,
     "feature": FeatureKD,
     "attention": AttentionKD,
+    "ce": CEOnly,
+    "hidden": HiddenStateKD,
 }
 
 

@@ -44,7 +44,7 @@ Example YAML:
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, fields, asdict
 from typing import Any
 
 
@@ -62,6 +62,20 @@ class Stage0Config:
     # None (=prefix default) | "prefix" | "suffix". "suffix" = faithful
     # decoder-only (GPT/OPT) ATBA reproduction (Cheng et al. 2024).
     trigger_position: str | None = None
+    # TIFS addendum A15 (all off by default = the historical build):
+    # * ``save_every_epoch`` — also save every epoch's weights (HF format)
+    #   under ``<teacher>/epochs/epoch<e>/`` and write ``<teacher>/epochs.json``
+    #   (per-epoch dev metrics, OpenBackdoor-selected and accuracy-only epoch,
+    #   weight hashes). The OB-selected checkpoint is saved at ``<teacher>/``
+    #   as before. Base trainer only.
+    # * ``ob_ckpt_pid`` — put the process id in OpenBackdoor's intermediate
+    #   checkpoint directory (``models/checkpoints/pid<pid>/...``), which is
+    #   otherwise named by the start second only.
+    # * ``build_kinds`` — None (both) or a subset of ["poisoned", "clean"]:
+    #   which of the planned teachers Stage 0 trains.
+    save_every_epoch: bool = False
+    ob_ckpt_pid: bool = False
+    build_kinds: list[str] | None = None
 
 
 @dataclass
@@ -103,6 +117,17 @@ class Stage1Config:
     # defaults to ``stage0.poison_rate`` if unset.
     kd_corpus_attack: str | None = None
     kd_corpus_attack_rate: float | None = None
+    # Trigger exposure without label poisoning (TIFS plan E4). When True,
+    # the ``kd_corpus_attack`` samples keep their original labels: the
+    # trigger is inserted at the same indices and positions as the
+    # label-poisoned corpus of the same ``corpus_seed``, but the corpus
+    # itself carries no trigger→target mapping. Any transfer must then
+    # come through the teacher's outputs on the triggered inputs.
+    kd_corpus_keep_label: bool = False
+    # CE weight of the no-teacher ``ce`` kd_type (TIFS plan E1). 1.0 is
+    # plain CE (the historical alpha=0 run); set to (1 - alpha) to keep
+    # the CE coefficient of the matched KD objective.
+    ce_only_coef: float = 1.0
     # H2: KD-from-CausalLM-teacher. The CausalLM KD trainer needs to know
     # where the pretrained Setup-B teachers live, since they are not
     # produced by Stage 0 in this experiment but by an earlier Phase 3
@@ -124,14 +149,63 @@ class Stage1Config:
     # Used to match the ATBA paper's decoder-student training regime.
     use_lora: bool = False
     lora_r: int = 32
+    # TIFS addendum A15-b (all off by default = the historical pairing):
+    # * ``clean_teacher_dir`` — teacher root holding the clean teachers
+    #   (None → ``output.teacher_dir``); poisoned teachers stay under
+    #   ``output.teacher_dir``.
+    # * ``clean_teacher_epoch`` — None: the OB-selected clean checkpoint;
+    #   an int e: that teacher's epoch-e weights (``<teacher>/epochs/epoch<e>``,
+    #   built with ``stage0.save_every_epoch``); "poisoned": the epoch
+    #   OpenBackdoor selected for the condition's poisoned teacher, read at
+    #   run time from its ``epochs.json``. Stage 2 probes the same teacher.
+    # * ``poisoned_student_run`` — run id (or {attack: run id}) whose
+    #   poisoned students, under the same tags, this run reuses: Stage 1
+    #   never trains or writes them, Stage 2 re-evaluates them.
+    # * ``record_provenance`` — add the teacher's weight hashes and epoch to
+    #   each new student's ``kd_meta.json``.
+    clean_teacher_dir: str | None = None
+    clean_teacher_epoch: int | str | None = None
+    poisoned_student_run: str | dict | None = None
+    record_provenance: bool = False
 
 
 @dataclass
 class Stage2Config:
-    """Counterfactual-KD evaluation."""
+    """Counterfactual-KD evaluation.
+
+    ``save_preds`` writes the per-input hit vectors every verdict and
+    decomposition is recomputed from (both students and both teachers,
+    triggered and untriggered, plus ``control_triggers``). It defaults to
+    True: runs without it cannot be re-analysed without retraining.
+
+    ``control_triggers`` are evaluation-only probes on the same non-target
+    inputs, e.g.::
+
+        control_triggers:
+          - {name: rare_unplanted, words: [qz], mode: substitute}
+          - {name: common, words: [the, and], mode: insert}
+          - {name: neutral_sentence, sentence: "I read this on a train"}
+
+    ``mode: insert`` (default) inserts the control at seeded random
+    positions. ``mode: substitute`` replaces the span(s) the attack's own
+    trigger inserted, so the control matches its position and count.
+
+    ``test_sets`` swaps a dataset's evaluation inputs for a named
+    alternative in ``counterfactual_kd.data.loaders.TEST_SETS``, e.g.
+    ``{sst2: sst2_test}`` (the labelled 1,821-sentence SST-2 test set
+    instead of half of GLUE validation). Training data is unchanged.
+    Classification evaluators only; the causal-LM evaluator ignores it.
+    """
     batch_size: int = 32
     max_length: int = 512
-    save_preds: bool = False
+    save_preds: bool = True
+    eval_dtype: str = "bf16"
+    control_triggers: list[dict] = field(default_factory=list)
+    test_sets: dict = field(default_factory=dict)
+    # TIFS addendum A15 (off by default): add a ``provenance`` block to each
+    # preds file's meta (code fingerprint, student and teacher paths, the
+    # SHA-256 of every probe's input texts).
+    record_provenance: bool = False
 
 
 @dataclass
@@ -178,6 +252,39 @@ class ExperimentConfig:
     # Optional attack-level kwargs overrides, keyed by attack name.
     # e.g. {"badnets": {"words": ["alt", "trigger"]}} for ablation runs.
     attack_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Seed decoupling (TIFS plan C1). ``seeds`` stays the replication
+    # index. Each field below, when set, pins one source of randomness to
+    # a fixed value instead of following the condition seed:
+    #   teacher_seed — which Stage 0 teachers are distilled
+    #   corpus_seed  — KD corpus subsampling and contamination draw
+    #   student_seed — student head init, data order, dropout
+    # None → follow ``seed`` (the historical behaviour). Example: retrain
+    # students on fresh corpus draws with the seed-42 teachers fixed:
+    #   seeds: [43, 44]
+    #   teacher_seed: 42
+    # Only the native KD path (methods with pairs, except kd_causallm)
+    # honours these.
+    teacher_seed: int | None = None
+    corpus_seed: int | None = None
+    student_seed: int | None = None
+    # TF32 tensor-core matmuls for every fp32 op in the run (teacher
+    # training, fp32 students, evaluation). Off by default so earlier
+    # configs keep their numerics; recorded in the run manifest.
+    tf32: bool = False
+
+    def resolve_seeds(self, seed: int) -> dict[str, int]:
+        """Per-source seeds for a condition whose replication seed is ``seed``."""
+        def pick(override):
+            return seed if override is None else int(override)
+        return {
+            "teacher_seed": pick(self.teacher_seed),
+            "corpus_seed": pick(self.corpus_seed),
+            "student_seed": pick(self.student_seed),
+        }
+
+    def teacher_seeds(self) -> list[int]:
+        """Distinct teacher seeds the KD conditions will look up."""
+        return sorted({self.resolve_seeds(s)["teacher_seed"] for s in self.seeds})
 
     def conditions(self) -> list[dict]:
         """Expand the matrix into concrete condition dicts.
@@ -205,6 +312,7 @@ class ExperimentConfig:
                                         "dataset": dataset,
                                         "kd_type": kd_type,
                                         "seed": seed,
+                                        **self.resolve_seeds(seed),
                                     })
             else:
                 # FT-family — single base model per condition, no kd_type.
@@ -277,6 +385,69 @@ class ExperimentConfig:
                 "FT-family methods (lora/qlora/sft) require `base_models: [...]`"
             )
 
+        # Seed overrides are wired through the native KD path only; the
+        # FT and kd_causallm trainers still read ``seed`` alone.
+        overrides = {
+            k: v for k, v in (("teacher_seed", self.teacher_seed),
+                              ("corpus_seed", self.corpus_seed),
+                              ("student_seed", self.student_seed))
+            if v is not None
+        }
+        if overrides:
+            unsupported = [
+                m for m in self.methods
+                if not method_spec(m).needs_pairs or m == "kd_causallm"
+            ]
+            if unsupported:
+                raise ValueError(
+                    f"Seed overrides {sorted(overrides)} are only supported "
+                    f"by the native KD path; not by methods {unsupported}"
+                )
+
+        if "ce" in self.kd_types:
+            # The no-teacher student must share the KD students' corpus
+            # realization, so it only makes sense on the native KD path.
+            bad = [m for m in self.methods if m == "kd_causallm"]
+            if bad:
+                raise ValueError(
+                    f"kd_type 'ce' is only supported by the native KD path; "
+                    f"not by methods {bad}"
+                )
+
+        if self.stage1.kd_corpus_keep_label and not self.stage1.kd_corpus_attack:
+            raise ValueError(
+                "stage1.kd_corpus_keep_label requires stage1.kd_corpus_attack"
+            )
+
+        self._validate_a15()
+
+        seen_controls: set[str] = set()
+        for ctrl in self.stage2.control_triggers:
+            name = ctrl.get("name")
+            if not name or name in seen_controls:
+                raise ValueError(
+                    f"Each control trigger needs a unique `name`; got {ctrl!r}"
+                )
+            seen_controls.add(name)
+            if ("words" in ctrl) == ("sentence" in ctrl):
+                raise ValueError(
+                    f"Control trigger {name!r} needs exactly one of "
+                    "`words` or `sentence`"
+                )
+            if ctrl.get("mode", "insert") not in ("insert", "substitute"):
+                raise ValueError(
+                    f"Control trigger {name!r}: mode must be 'insert' or "
+                    f"'substitute'; got {ctrl.get('mode')!r}"
+                )
+
+        from counterfactual_kd.data.loaders import TEST_SETS
+        for ds, name in (self.stage2.test_sets or {}).items():
+            if (ds, name) not in TEST_SETS:
+                raise ValueError(
+                    f"stage2.test_sets: no test set {name!r} for dataset "
+                    f"{ds!r}; known: {sorted(TEST_SETS)}"
+                )
+
         # Method × attack compatibility — reject ATBA on LoRA, VPI on KD, etc.
         # Each AttackSpec declares the method families it supports
         # (``method_families``); this loop fails fast on incoherent
@@ -308,6 +479,42 @@ class ExperimentConfig:
                 "from the matrix."
             )
 
+    def _validate_a15(self) -> None:
+        """Checks of the A15 options; a no-op while they are unset."""
+        from counterfactual_kd.registry import attack_trainer
+        kinds = self.stage0.build_kinds
+        if kinds is not None:
+            if not kinds or not set(kinds) <= {"poisoned", "clean"}:
+                raise ValueError(
+                    f"stage0.build_kinds must be a non-empty subset of "
+                    f"['poisoned', 'clean']; got {kinds!r}")
+        if self.stage0.save_every_epoch:
+            bad = [a for a in self.attacks if attack_trainer(a) != "base"]
+            if bad:
+                raise ValueError(
+                    f"stage0.save_every_epoch supports the base trainer only; "
+                    f"not {bad}")
+        ep = self.stage1.clean_teacher_epoch
+        if ep is not None and ep != "poisoned" and not (
+                isinstance(ep, int) and not isinstance(ep, bool) and ep >= 1):
+            raise ValueError(
+                f"stage1.clean_teacher_epoch must be None, an epoch >= 1 or "
+                f"'poisoned'; got {ep!r}")
+        run = self.stage1.poisoned_student_run
+        if run is not None:
+            if "ce" in self.kd_types:
+                raise ValueError(
+                    "stage1.poisoned_student_run cannot be combined with kd_type 'ce'")
+            if isinstance(run, dict):
+                missing = [a for a in self.attacks if a not in run]
+                if missing:
+                    raise ValueError(
+                        f"stage1.poisoned_student_run names no run for {missing}")
+            elif not isinstance(run, str) or not run:
+                raise ValueError(
+                    f"stage1.poisoned_student_run must be a run id or "
+                    f"{{attack: run id}}; got {run!r}")
+
     # ── Serialization ─────────────────────────────────────────────
 
     def to_dict(self) -> dict:
@@ -315,7 +522,25 @@ class ExperimentConfig:
         # dataclass asdict turns tuples to lists already; make pairs
         # consistently lists so YAML is stable.
         d["pairs"] = [list(p) for p in self.pairs]
+        # A15 options are written only when set, so the config snapshot of
+        # every run that does not use them is byte-identical to before.
+        for section, keys in A15_OPTIONAL_KEYS.items():
+            defaults = {f.name: f.default for f in fields(_SECTION_CLASSES[section])}
+            for k in keys:
+                if d[section].get(k) == defaults[k]:
+                    d[section].pop(k, None)
         return d
+
+
+# Keys left out of ``to_dict`` while at their defaults (A15).
+A15_OPTIONAL_KEYS = {
+    "stage0": ("save_every_epoch", "ob_ckpt_pid", "build_kinds"),
+    "stage1": ("clean_teacher_dir", "clean_teacher_epoch", "poisoned_student_run",
+               "record_provenance"),
+    "stage2": ("record_provenance",),
+}
+_SECTION_CLASSES = {"stage0": Stage0Config, "stage1": Stage1Config,
+                    "stage2": Stage2Config}
 
 
 # ── YAML load/save ───────────────────────────────────────────────────
@@ -374,4 +599,8 @@ def _from_dict(raw: dict) -> ExperimentConfig:
         stage2=_section(Stage2Config, "stage2"),
         output=_section(OutputConfig, "output"),
         attack_overrides=dict(raw.get("attack_overrides", {})),
+        teacher_seed=raw.get("teacher_seed"),
+        corpus_seed=raw.get("corpus_seed"),
+        student_seed=raw.get("student_seed"),
+        tf32=bool(raw.get("tf32", False)),
     )
